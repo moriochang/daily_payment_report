@@ -317,7 +317,13 @@
     </div>
 
     <script>
-        // 不再需要年度目標映射，改用行號白名單識別
+        // 店鋪年度目標映射(耐斯店除外，因為有重複)
+        const storeYearTargets = {
+            425500: '中港店',
+            280000: '中友店',
+            85000: '台中三井店',
+            120000: '垂楊店'
+        };
 
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
@@ -413,31 +419,29 @@
             }
             
             // 從第3行開始解析數據(前2行是標題)
-            // 使用行號白名單，只識別這五家店
-            const storeRowMapping = {
-                3: '中港店',    // A6
-                4: '中友店',    // A7
-                5: '台中三井店', // A8
-                8: '耐斯店',    // A11
-                13: '垂楊店'    // A16
-            };
-            
             for (let i = 2; i < jsonData.length; i++) {
                 const row = jsonData[i];
                 if (!row || row.length < 30) continue;
                 
                 const yearTarget = row[2];
-                const monthTarget = row[3];
+                let storeName = null;
                 
-                // 只識別白名單中的行號
-                const storeName = storeRowMapping[i];
+                // 優先用行號識別耐斯店 (A11 = jsonData[10])
+                if (i === 10) {
+                    storeName = '耐斯店';
+                    console.log(`✓ 識別到 ${storeName} (Excel行號:A${i+1}, 陣列索引:${i}, 年度目標:${yearTarget}, 月目標:${row[3]})`);
+                } else {
+                    // 其他店用年度目標識別
+                    storeName = storeYearTargets[yearTarget];
+                    if (storeName) {
+                        console.log(`✓ 識別到 ${storeName} (Excel行號:A${i+1}, 陣列索引:${i}, 年度目標:${yearTarget}, 月目標:${row[3]})`);
+                    }
+                }
                 
                 if (storeName) {
-                    console.log(`✓ 識別到 ${storeName} (Excel行號:A${i+3}, 陣列索引:${i}, 年度目標:${yearTarget}, 月目標:${monthTarget})`);
-                    
                     data[storeName] = {
                         yearTarget: yearTarget,
-                        monthTarget: monthTarget,
+                        monthTarget: row[3],
                         monthActual: row[10],
                         monthEstimate: row[11],
                         monthEstimateRate: (row[12] * 100).toFixed(2),
