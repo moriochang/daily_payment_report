@@ -190,24 +190,23 @@
         }
 
         .export-btn {
-            /* 顏色改為灰色，表示功能已停用 */
-            background: linear-gradient(135deg, #a0a0a0 0%, #808080 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 15px 40px;
             border: none;
             border-radius: 30px;
             font-size: 1.1em;
             font-weight: 600;
-            cursor: not-allowed; /* 游標變更為禁止 */
+            cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
             margin: 20px auto;
             display: block;
         }
 
         .export-btn:hover {
-            transform: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
         }
 
         .note {
@@ -250,7 +249,7 @@
             <div class="upload-area" id="uploadArea">
                 <div class="upload-icon">📈</div>
                 <div class="upload-text">拖曳Excel文件至此處</div>
-                <div class="upload-hint">或點擊選擇文件（支援 .xlsx 格式）</div>
+                <div class="upload-hint">或點擊選擇文件(支持 .xlsx 格式)</div>
             </div>
             <input type="file" id="fileInput" accept=".xlsx">
         </div>
@@ -309,33 +308,15 @@
                 </table>
             </div>
 
-            <button class="export-btn" onclick="exportToExcel()" title="此功能已停用，因您只需要分析和顯示數據">🚫 匯出至Excel (已停用)</button>
+            <button class="export-btn" onclick="exportToExcel()">📥 匯出至Excel</button>
 
             <div class="note">
-                <strong>💡 提示：</strong> 數據已自動提取並整理完成。店鋪識別已優化為依據報表內店名關鍵字。綠色數字表示正成長，紅色數字表示負成長。
+                <strong>💡 提示:</strong> 數據已自動提取並整理完成。綠色數字表示正成長,紅色數字表示負成長。
             </div>
         </div>
     </div>
 
     <script>
-        // 店鋪年度目標映射（保留，作為數據欄位名稱參考，但不再作為主要識別依據）
-        const storeYearTargets = {
-            425500: '中港店',
-            280000: '中友店',
-            85000: '台中三井店',
-            110000: '耐斯店',
-            120000: '垂楊店'
-        };
-
-        // 💡 店鋪關鍵字列表 - 用於從 row[0] 識別店名 (優化後的店別抓取邏輯)
-        const storeKeywords = {
-            '中港': '中港店',
-            '中友': '中友店',
-            '三井': '台中三井店',
-            '耐斯': '耐斯店',
-            '垂楊': '垂楊店'
-        };
-
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const resultsSection = document.getElementById('resultsSection');
@@ -373,7 +354,7 @@
             const fileName = file.name.toLowerCase();
             
             if (!fileName.endsWith('.xlsx')) {
-                alert('請上傳 Excel 文件（.xlsx格式）！');
+                alert('請上傳 Excel 文件(.xlsx格式)!');
                 return;
             }
 
@@ -391,7 +372,7 @@
                 
             } catch (error) {
                 console.error('Excel解析錯誤:', error);
-                alert('Excel解析失敗！請確認文件格式正確。');
+                alert('Excel解析失敗!請確認文件格式正確。');
             }
         }
 
@@ -429,32 +410,60 @@
                 }
             }
             
-            // 從第3行開始解析數據（索引 i=2）
+            // 儲存已識別的店鋪行號,避免重複
+            const identifiedRows = new Set();
+            
+            // 從第3行開始解析數據(前2行是標題)
             for (let i = 2; i < jsonData.length; i++) {
                 const row = jsonData[i];
+                if (!row || row.length < 30) continue;
                 
-                // 確保行有足夠數據且第1欄不為空
-                if (!row || row.length < 30 || !row[0]) continue; 
+                // 跳過已識別的行
+                if (identifiedRows.has(i)) continue;
                 
-                const cellA = String(row[0]).trim(); // 取得第1欄的文字內容 (索引 0)
-                let storeName = '';
-
-                // 💡 使用關鍵字識別店名 (優先，解決原本依賴年度目標的問題)
-                for (const keyword in storeKeywords) {
-                    if (cellA.includes(keyword)) {
-                        storeName = storeKeywords[keyword];
-                        break;
+                const yearTarget = row[2];
+                const monthTarget = row[3];
+                
+                // 使用年度目標+月目標組合來識別店鋪
+                let storeName = null;
+                
+                // 根據年度目標來識別
+                if (yearTarget === 425500) {
+                    storeName = '中港店';
+                } else if (yearTarget === 280000) {
+                    storeName = '中友店';
+                } else if (yearTarget === 85000) {
+                    storeName = '台中三井店';
+                } else if (yearTarget === 110000) {
+                    storeName = '耐斯店';
+                } else if (yearTarget === 120000) {
+                    storeName = '垂楊店';
+                }
+                
+                // 如果年度目標識別失敗,嘗試用行號定位
+                if (!storeName) {
+                    // A6=中港店(i=3), A7=中友店(i=4), A8=台中三井店(i=5), A11=耐斯店(i=8), A16=垂楊店(i=13)
+                    // Excel行號對應: A6對應索引3, A7對應索引4...
+                    if (i === 3 || (i >= 3 && i <= 5 && !identifiedRows.has(3))) {
+                        storeName = '中港店';
+                    } else if (i === 4 || (i >= 4 && i <= 6 && !identifiedRows.has(4))) {
+                        storeName = '中友店';
+                    } else if (i === 5 || (i >= 5 && i <= 7 && !identifiedRows.has(5))) {
+                        storeName = '台中三井店';
+                    } else if (i === 8 || (i >= 8 && i <= 10 && !identifiedRows.has(8))) {
+                        storeName = '耐斯店';
+                    } else if (i === 13 || (i >= 13 && i <= 15 && !identifiedRows.has(13))) {
+                        storeName = '垂楊店';
                     }
                 }
-
-                // 只有成功識別到店名才進行數據提取
+                
                 if (storeName) {
-                    const yearTarget = row[2]; // 年度目標
-
+                    console.log(`✓ 識別到 ${storeName} (行號:${i+1}, 年度目標:${yearTarget}, 月目標:${monthTarget})`);
+                    identifiedRows.add(i);
+                    
                     data[storeName] = {
-                        // 欄位索引保持不變
                         yearTarget: yearTarget,
-                        monthTarget: row[3],
+                        monthTarget: monthTarget,
                         monthActual: row[10],
                         monthEstimate: row[11],
                         monthEstimateRate: (row[12] * 100).toFixed(2),
@@ -492,10 +501,10 @@
                 reportDateBadge.textContent = dates.reportDate;
             }
             if (dates.monthRange) {
-                monthTitle.textContent = `📅 月份數據（${dates.monthRange}）`;
+                monthTitle.textContent = `📅 月份數據(${dates.monthRange})`;
             }
             if (dates.yearRange) {
-                yearTitle.textContent = `📈 年度數據（${dates.yearRange}）`;
+                yearTitle.textContent = `📈 年度數據(${dates.yearRange})`;
             }
             
             monthlyBody.innerHTML = '';
@@ -551,13 +560,36 @@
 
         function formatNumber(num) {
             if (num === undefined || num === null) return '0';
-            // 確保取整後再格式化
             return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         }
 
-        // 💡 匯出功能已停用，因應您的需求 (只分析顯示)
         function exportToExcel() {
-            alert('此功能已停用，請使用網頁上的數據進行分析。');
+            let csv = '\ufeff店鋪銷售數據報表\n\n';
+            csv += '月份數據\n';
+            csv += '店名,目標,預估業績,實績,預估達成率,預估差距,去年同期,成長比,成長金額,月計達成率,目標差距\n';
+            
+            const monthlyRows = document.querySelectorAll('#monthlyBody tr');
+            monthlyRows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const rowData = Array.from(cells).map(cell => cell.textContent.trim());
+                csv += rowData.join(',') + '\n';
+            });
+
+            csv += '\n年度數據\n';
+            csv += '店名,年度目標,預估業績,實績,預估達成率,預估差距,同期實績,成長比,成長金額,月計達成率,目標差距\n';
+            
+            const yearlyRows = document.querySelectorAll('#yearlyBody tr');
+            yearlyRows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const rowData = Array.from(cells).map(cell => cell.textContent.trim());
+                csv += rowData.join(',') + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = '店鋪銷售數據_' + new Date().toISOString().slice(0, 10) + '.csv';
+            link.click();
         }
     </script>
 </body>
