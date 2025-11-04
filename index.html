@@ -317,8 +317,15 @@
     </div>
 
     <script>
-        // 【已修正】移除 storeYearTargets 變數，避免年度目標重複導致的識別錯誤
-        
+        // 店鋪年度目標映射（只使用年度目標識別）
+        const storeYearTargets = {
+            425500: '中港店',
+            280000: '中友店',
+            85000: '台中三井店',
+            110000: '耐斯店',
+            120000: '垂楊店'
+        };
+
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const resultsSection = document.getElementById('resultsSection');
@@ -364,7 +371,6 @@
                 const arrayBuffer = await file.arrayBuffer();
                 const workbook = XLSX.read(arrayBuffer, { type: 'array' });
                 const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                // 讀取時加上 header: 1 以便使用行索引 i
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                 
                 // 解析Excel數據
@@ -413,41 +419,16 @@
                 }
             }
             
-            // 從第3行開始解析數據（Excel A1 = 索引 0）
-            // i = 2 是 CSV 的第 3 行，對應 Excel 的 A3
+            // 從第3行開始解析數據（前2行是標題）
             for (let i = 2; i < jsonData.length; i++) {
                 const row = jsonData[i];
-                // 檢查行數據完整性
                 if (!row || row.length < 30) continue;
                 
                 const yearTarget = row[2];
-                const monthTarget = row[3]; // 為了 hasValidData 檢查
-                let storeName = null; // 使用 let 讓 storeName 可以被重新賦值
+                const storeName = storeYearTargets[yearTarget];
                 
-                // 檢查當前行是否有有效數據 (確保不是空白或無用行)
-                const hasValidData = yearTarget > 0 || monthTarget > 0;
-                
-                if (hasValidData) {
-                    // 【已修正】使用穩定的行號索引 (i) 進行店別識別
-                    // Excel 行號對應 (從 0 開始, 標題佔 2 行):
-                    // A6=中港店(i=3), A7=中友店(i=4), A11=耐斯店(i=8), A16=垂楊店(i=13), A20=台中三井店(i=17)
-                    
-                    if (i === 3) {
-                        storeName = '中港店';
-                    } else if (i === 4) {
-                        storeName = '中友店';
-                    } else if (i === 8) {
-                        storeName = '耐斯店'; // 修正衝突：只取 A11 行的數據
-                    } else if (i === 13) {
-                        storeName = '垂楊店'; // 修正衝突：只取 A16 行的數據
-                    } else if (i === 17) {
-                        storeName = '台中三井店'; // 修正衝突：只取 A20 行的數據
-                    }
-                }
-                
-                // 只有當 storeName 被成功定義為目標店別時，才進行數據存儲
                 if (storeName) {
-                    // console.log(`✓ 識別到 ${storeName}（行索引：${i}，年度目標：${yearTarget}，月目標：${row[3]}）`);
+                    console.log(`✓ 識別到 ${storeName}（年度目標：${yearTarget}，月目標：${row[3]}）`);
                     
                     data[storeName] = {
                         yearTarget: yearTarget,
@@ -498,7 +479,6 @@
             monthlyBody.innerHTML = '';
             yearlyBody.innerHTML = '';
 
-            // 確保五家店的顯示順序
             const storeOrder = ['中港店', '中友店', '台中三井店', '耐斯店', '垂楊店'];
 
             storeOrder.forEach(storeName => {
@@ -530,7 +510,6 @@
                             <td>${formatNumber(d.yearTarget)}</td>
                             <td>${formatNumber(d.yearEstimate)}</td>
                             <td>${formatNumber(d.yearActual)}</td>
-                            <td>${formatNumber(d.yearActual)}</td>
                             <td>${d.yearEstimateRate}%</td>
                             <td class="${d.yearEstimateDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(d.yearEstimateDiff)}</td>
                             <td>${formatNumber(d.lastYearSamePeriod)}</td>
@@ -550,7 +529,6 @@
 
         function formatNumber(num) {
             if (num === undefined || num === null) return '0';
-            // 將數字四捨五入到整數並加入千位分隔符
             return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         }
 
