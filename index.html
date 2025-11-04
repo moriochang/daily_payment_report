@@ -442,23 +442,30 @@
                 
                 // 如果年度目標識別失敗,嘗試用行號定位
                 if (!storeName) {
-                    // A6=中港店(i=3), A7=中友店(i=4), A8=台中三井店(i=5), A11=耐斯店(i=8), A16=垂楊店(i=13)
-                    // Excel行號對應: A6對應索引3, A7對應索引4...
-                    if (i === 3 || (i >= 3 && i <= 5 && !identifiedRows.has(3))) {
-                        storeName = '中港店';
-                    } else if (i === 4 || (i >= 4 && i <= 6 && !identifiedRows.has(4))) {
-                        storeName = '中友店';
-                    } else if (i === 5 || (i >= 5 && i <= 7 && !identifiedRows.has(5))) {
-                        storeName = '台中三井店';
-                    } else if (i === 8 || (i >= 8 && i <= 10 && !identifiedRows.has(8))) {
-                        storeName = '耐斯店';
-                    } else if (i === 13 || (i >= 13 && i <= 15 && !identifiedRows.has(13))) {
-                        storeName = '垂楊店';
+                    // Excel行號對應(從0開始,標題佔2行):
+                    // A6=中港店(i=3), A7=中友店(i=4), A8=台中三井店(i=5)
+                    // A11=耐斯店(i=8), A16=垂楊店(i=13)
+                    
+                    // 檢查資料是否有效(年度目標或月目標存在)
+                    const hasValidData = yearTarget > 0 || monthTarget > 0;
+                    
+                    if (hasValidData) {
+                        if (i === 3) {
+                            storeName = '中港店';
+                        } else if (i === 4) {
+                            storeName = '中友店';
+                        } else if (i === 5) {
+                            storeName = '台中三井店';
+                        } else if (i === 8) {
+                            storeName = '耐斯店';
+                        } else if (i === 13) {
+                            storeName = '垂楊店';
+                        }
                     }
                 }
                 
                 if (storeName) {
-                    console.log(`✓ 識別到 ${storeName} (行號:${i+1}, 年度目標:${yearTarget}, 月目標:${monthTarget})`);
+                    console.log(`✓ 識別到 ${storeName} (Excel行號:A${i+4}, 陣列索引:${i}, 年度目標:${yearTarget}, 月目標:${monthTarget})`);
                     identifiedRows.add(i);
                     
                     data[storeName] = {
