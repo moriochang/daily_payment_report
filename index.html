@@ -242,7 +242,7 @@
     <div class="container">
         <div class="header">
             <h1>📊 日預估達成報表轉換工具</h1>
-            <p>自動提取並整理五家店鋪數據</p>
+            <p>自動擷取並整理五家店鋪數據</p>
         </div>
 
         <div class="upload-section">
@@ -311,20 +311,20 @@
             <button class="export-btn" onclick="exportToExcel()">📥 匯出至Excel</button>
 
             <div class="note">
-                <strong>💡 提示：</strong> 數據已自動提取並整理完成。綠色數字表示正成長，紅色數字表示負成長。
+                <strong>💡 提示：</strong> 數據已自動擷取並整理完成。綠色數字表示正成長，紅色數字表示負成長。
             </div>
         </div>
     </div>
 
     <script>
-        // 店鋪年度目標映射（只使用年度目標識別）
+        // 店鋪配置：使用行號作為主要識別，年度目標作為驗證
         const storeConfig = {
-           3: { name: '中港店', yearTarget: 425500 },    // Excel A6
-           4: { name: '中友店', yearTarget: 280000 },    // Excel A7
-           5: { name: '台中三井店', yearTarget: 85000 },  // Excel A8
-           8: { name: '耐斯店', yearTarget: 110000 },    // Excel A11
-          13: { name: '垂楊店', yearTarget: 120000 }    // Excel A16
-         };
+            3: { name: '中港店', yearTarget: 425500 },    // A6 (Excel行6 = 陣列索引3)
+            4: { name: '中友店', yearTarget: 280000 },    // A7
+            5: { name: '台中三井店', yearTarget: 85000 },  // A8
+            8: { name: '耐斯店', yearTarget: 110000 },    // A11
+            13: { name: '垂楊店', yearTarget: 120000 }    // A16
+        };
 
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
@@ -393,7 +393,7 @@
                 yearRange: ''
             };
             
-            // 從第一行提取日期資訊
+            // 從第一行擷取日期資訊
             if (jsonData.length > 0) {
                 const firstRow = jsonData[0];
                 
@@ -425,14 +425,25 @@
                 if (!row || row.length < 30) continue;
                 
                 const yearTarget = row[2];
-                const storeName = storeYearTargets[yearTarget];
+                const monthTarget = row[3];
                 
-                if (storeName) {
-                    console.log(`✓ 識別到 ${storeName}（年度目標：${yearTarget}，月目標：${row[3]}）`);
+                // 使用行號作為主要識別方式
+                const rowIndex = i;
+                const storeInfo = storeConfig[rowIndex];
+                
+                if (storeInfo) {
+                    const storeName = storeInfo.name;
+                    
+                    // 驗證年度目標是否匹配（可選，用於除錯）
+                    if (yearTarget !== storeInfo.yearTarget) {
+                        console.warn(`⚠️ ${storeName} 年度目標不符：預期 ${storeInfo.yearTarget}，實際 ${yearTarget}`);
+                    } else {
+                        console.log(`✓ 識別到 ${storeName}（行號：${rowIndex}，年度目標：${yearTarget}，月目標：${monthTarget}）`);
+                    }
                     
                     data[storeName] = {
                         yearTarget: yearTarget,
-                        monthTarget: row[3],
+                        monthTarget: monthTarget,
                         monthActual: row[10],
                         monthEstimate: row[11],
                         monthEstimateRate: (row[12] * 100).toFixed(2),
