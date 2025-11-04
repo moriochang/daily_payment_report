@@ -242,14 +242,14 @@
     <div class="container">
         <div class="header">
             <h1>📊 日預估達成報表轉換工具</h1>
-            <p>自動擷取並整理五家店鋪數據</p>
+            <p>自動提取並整理五家店鋪數據</p>
         </div>
 
         <div class="upload-section">
             <div class="upload-area" id="uploadArea">
                 <div class="upload-icon">📈</div>
                 <div class="upload-text">拖曳Excel文件至此處</div>
-                <div class="upload-hint">或點擊選擇文件（支援 .xlsx 格式）</div>
+                <div class="upload-hint">或點擊選擇文件(支持 .xlsx 格式)</div>
             </div>
             <input type="file" id="fileInput" accept=".xlsx">
         </div>
@@ -308,22 +308,21 @@
                 </table>
             </div>
 
-            <button class="export-btn" onclick="exportToExcel()">📥 匯出至Excel</button>
+            <button class="export-btn" onclick="exportToExcel()">💾 匯出至Excel</button>
 
             <div class="note">
-                <strong>💡 提示：</strong> 數據已自動擷取並整理完成。綠色數字表示正成長，紅色數字表示負成長。
+                <strong>💡 提示:</strong> 數據已自動提取並整理完成。綠色數字表示正成長,紅色數字表示負成長。
             </div>
         </div>
     </div>
 
     <script>
-        // 店鋪配置：使用行號作為主要識別，年度目標作為驗證
-        const storeConfig = {
-            3: { name: '中港店', yearTarget: 425500 },    // A6 (Excel行6 = 陣列索引3)
-            4: { name: '中友店', yearTarget: 280000 },    // A7
-            5: { name: '台中三井店', yearTarget: 85000 },  // A8
-            8: { name: '耐斯店', yearTarget: 110000 },    // A11
-            13: { name: '垂楊店', yearTarget: 120000 }    // A16
+        // 店鋪年度目標映射(耐斯店除外，因為有重複)
+        const storeYearTargets = {
+            425500: '中港店',
+            280000: '中友店',
+            85000: '台中三井店',
+            120000: '垂楊店'
         };
 
         const uploadArea = document.getElementById('uploadArea');
@@ -363,7 +362,7 @@
             const fileName = file.name.toLowerCase();
             
             if (!fileName.endsWith('.xlsx')) {
-                alert('請上傳 Excel 文件（.xlsx格式）！');
+                alert('請上傳 Excel 文件(.xlsx格式)!');
                 return;
             }
 
@@ -381,7 +380,7 @@
                 
             } catch (error) {
                 console.error('Excel解析錯誤:', error);
-                alert('Excel解析失敗！請確認文件格式正確。');
+                alert('Excel解析失敗!請確認文件格式正確。');
             }
         }
 
@@ -393,7 +392,7 @@
                 yearRange: ''
             };
             
-            // 從第一行擷取日期資訊
+            // 從第一行提取日期資訊
             if (jsonData.length > 0) {
                 const firstRow = jsonData[0];
                 
@@ -419,31 +418,28 @@
                 }
             }
             
-            // 從第3行開始解析數據（前2行是標題）
+            // 從第3行開始解析數據(前2行是標題)
             for (let i = 2; i < jsonData.length; i++) {
                 const row = jsonData[i];
                 if (!row || row.length < 30) continue;
                 
                 const yearTarget = row[2];
-                const monthTarget = row[3];
+                let storeName = null;
                 
-                // 使用行號作為主要識別方式
-                const rowIndex = i;
-                const storeInfo = storeConfig[rowIndex];
+                // 優先用行號識別耐斯店 (A11 = i=8)
+                if (i === 8) {
+                    storeName = '耐斯店';
+                } else {
+                    // 其他店用年度目標識別
+                    storeName = storeYearTargets[yearTarget];
+                }
                 
-                if (storeInfo) {
-                    const storeName = storeInfo.name;
-                    
-                    // 驗證年度目標是否匹配（可選，用於除錯）
-                    if (yearTarget !== storeInfo.yearTarget) {
-                        console.warn(`⚠️ ${storeName} 年度目標不符：預期 ${storeInfo.yearTarget}，實際 ${yearTarget}`);
-                    } else {
-                        console.log(`✓ 識別到 ${storeName}（行號：${rowIndex}，年度目標：${yearTarget}，月目標：${monthTarget}）`);
-                    }
+                if (storeName) {
+                    console.log(`✓ 識別到 ${storeName} (行號:${i+1}, 年度目標:${yearTarget}, 月目標:${row[3]})`);
                     
                     data[storeName] = {
                         yearTarget: yearTarget,
-                        monthTarget: monthTarget,
+                        monthTarget: row[3],
                         monthActual: row[10],
                         monthEstimate: row[11],
                         monthEstimateRate: (row[12] * 100).toFixed(2),
@@ -481,10 +477,10 @@
                 reportDateBadge.textContent = dates.reportDate;
             }
             if (dates.monthRange) {
-                monthTitle.textContent = `📅 月份數據（${dates.monthRange}）`;
+                monthTitle.textContent = `📅 月份數據(${dates.monthRange})`;
             }
             if (dates.yearRange) {
-                yearTitle.textContent = `📈 年度數據（${dates.yearRange}）`;
+                yearTitle.textContent = `📈 年度數據(${dates.yearRange})`;
             }
             
             monthlyBody.innerHTML = '';
