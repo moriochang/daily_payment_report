@@ -1,247 +1,564 @@
-<script>
-    // 店鋪年度目標映射（保留，作為數據欄位名稱參考，但不再作為主要識別依據）
-    const storeYearTargets = {
-        425500: '中港店',
-        280000: '中友店',
-        85000: '台中三井店',
-        110000: '耐斯店',
-        120000: '垂楊店'
-    };
-
-    // 💡 店鋪關鍵字列表 - 用於從 row[0] 識別店名
-    const storeKeywords = {
-        '中港': '中港店',
-        '中友': '中友店',
-        '三井': '台中三井店',
-        '耐斯': '耐斯店',
-        '垂楊': '垂楊店'
-    };
-
-    const uploadArea = document.getElementById('uploadArea');
-    const fileInput = document.getElementById('fileInput');
-    const resultsSection = document.getElementById('resultsSection');
-
-    // 點擊上傳
-    uploadArea.addEventListener('click', () => fileInput.click());
-
-    // 拖曳功能
-    uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.classList.add('dragover');
-    });
-
-    uploadArea.addEventListener('dragleave', () => {
-        uploadArea.classList.remove('dragover');
-    });
-
-    uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove('dragover');
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            handleFile(files[0]);
-        }
-    });
-
-    // 文件選擇
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-            handleFile(e.target.files[0]);
-        }
-    });
-
-    async function handleFile(file) {
-        const fileName = file.name.toLowerCase();
-        
-        if (!fileName.endsWith('.xlsx')) {
-            alert('請上傳 Excel 文件（.xlsx格式）！');
-            return;
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日預估達成報表轉換工具</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        try {
-            const arrayBuffer = await file.arrayBuffer();
-            // 讀取 Excel 檔案
-            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-            // 轉換為 JSON 數據，header: 1 表示將數據作為陣列處理
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+
+        .upload-area:hover {
+            background: #eef1ff;
+            border-color: #764ba2;
+            transform: scale(1.02);
+        }
+
+        .upload-area.dragover {
+            background: #e0e7ff;
+            border-color: #4f46e5;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .upload-text {
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .upload-hint {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .results-section {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .date-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.6em;
+            font-weight: normal;
+            margin-left: auto;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 40px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th {
+            padding: 18px 12px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9em;
+            border-right: 1px solid rgba(255,255,255,0.2);
+        }
+
+        th:last-child {
+            border-right: none;
+        }
+
+        td {
+            padding: 15px 12px;
+            text-align: center;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.95em;
+        }
+
+        tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        tbody tr:hover {
+            background: #f8f9ff;
+            transform: scale(1.01);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .store-name {
+            font-weight: 700;
+            color: #667eea;
+            text-align: left;
+            padding-left: 20px;
+        }
+
+        .positive {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .negative {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .export-btn {
+            /* 顏色改為灰色，表示功能已停用 */
+            background: linear-gradient(135deg, #a0a0a0 0%, #808080 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: not-allowed; /* 游標變更為禁止 */
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            display: block;
+        }
+
+        .export-btn:hover {
+            transform: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .note {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            margin-top: 30px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            color: #92400e;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
             
-            // 解析Excel數據
-            const result = parseExcelData(jsonData);
+            .upload-section, .results-section {
+                padding: 20px;
+            }
             
-            // 顯示結果
-            displayResults(result.data, result.dates);
+            table {
+                font-size: 0.8em;
+            }
             
-        } catch (error) {
-            console.error('Excel解析錯誤:', error);
-            alert('Excel解析失敗！請確認文件格式正確。');
+            th, td {
+                padding: 8px 4px;
+            }
         }
-    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 日預估達成報表轉換工具</h1>
+            <p>自動提取並整理五家店鋪數據</p>
+        </div>
 
-    function parseExcelData(jsonData) {
-        const data = {};
-        let dates = {
-            reportDate: '',
-            monthRange: '',
-            yearRange: ''
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📈</div>
+                <div class="upload-text">拖曳Excel文件至此處</div>
+                <div class="upload-hint">或點擊選擇文件（支援 .xlsx 格式）</div>
+            </div>
+            <input type="file" id="fileInput" accept=".xlsx">
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="section-title">
+                <span id="monthTitle">📅 月份數據</span>
+                <span class="date-badge" id="reportDate">資料日期</span>
+            </div>
+            
+            <div class="table-container">
+                <table id="monthlyTable">
+                    <thead>
+                        <tr>
+                            <th>店名</th>
+                            <th>目標<br><small>(月預估)</small></th>
+                            <th>預估業績<br><small>(月別)</small></th>
+                            <th>實績<br><small>(月別)</small></th>
+                            <th>預估達成率<br><small>(月別)</small></th>
+                            <th>預估差距<br><small>(月別)</small></th>
+                            <th>去年同期</th>
+                            <th>成長比</th>
+                            <th>成長金額</th>
+                            <th>月計達成率<br><small>(月別)</small></th>
+                            <th>目標差距<br><small>(月別)</small></th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthlyBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="section-title" style="margin-top: 50px;">
+                <span id="yearTitle">📈 年度數據</span>
+            </div>
+            
+            <div class="table-container">
+                <table id="yearlyTable">
+                    <thead>
+                        <tr>
+                            <th>店名</th>
+                            <th>年度目標</th>
+                            <th>預估業績<br><small>(年計)</small></th>
+                            <th>實績<br><small>(年計)</small></th>
+                            <th>預估達成率<br><small>(年計)</small></th>
+                            <th>預估差距<br><small>(年計)</small></th>
+                            <th>同期實績<br><small>(去年)</small></th>
+                            <th>成長比</th>
+                            <th>成長金額</th>
+                            <th>月計達成率<br><small>(年度)</small></th>
+                            <th>目標差距<br><small>(年度)</small></th>
+                        </tr>
+                    </thead>
+                    <tbody id="yearlyBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <button class="export-btn" onclick="exportToExcel()" title="此功能已停用，因您只需要分析和顯示數據">🚫 匯出至Excel (已停用)</button>
+
+            <div class="note">
+                <strong>💡 提示：</strong> 數據已自動提取並整理完成。店鋪識別已優化為依據報表內店名關鍵字。綠色數字表示正成長，紅色數字表示負成長。
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 店鋪年度目標映射（保留，作為數據欄位名稱參考，但不再作為主要識別依據）
+        const storeYearTargets = {
+            425500: '中港店',
+            280000: '中友店',
+            85000: '台中三井店',
+            110000: '耐斯店',
+            120000: '垂楊店'
         };
-        
-        // 從第一行提取日期資訊 (不變)
-        if (jsonData.length > 0) {
-            const firstRow = jsonData[0];
+
+        // 💡 店鋪關鍵字列表 - 用於從 row[0] 識別店名 (優化後的店別抓取邏輯)
+        const storeKeywords = {
+            '中港': '中港店',
+            '中友': '中友店',
+            '三井': '台中三井店',
+            '耐斯': '耐斯店',
+            '垂楊': '垂楊店'
+        };
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const resultsSection = document.getElementById('resultsSection');
+
+        // 點擊上傳
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        // 拖曳功能
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // 文件選擇
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        async function handleFile(file) {
+            const fileName = file.name.toLowerCase();
             
-            for (let cell of firstRow) {
-                if (cell && typeof cell === 'string') {
-                    // 報表日期
-                    const reportDateMatch = cell.match(/(\d{1,2}\/\d{1,2})\s*$/);
-                    if (reportDateMatch && !dates.reportDate) {
-                        dates.reportDate = reportDateMatch[1];
-                    }
-                    
-                    // 月份範圍和年度範圍
-                    const monthRangeMatch = cell.match(/(\d{1,2}\/\d{1,2}~\d{1,2}\/\d{1,2})/);
-                    if (monthRangeMatch) {
-                        const range = monthRangeMatch[1];
-                        if (!range.startsWith('1/1')) {
-                            dates.monthRange = range;
-                        } else {
-                            dates.yearRange = range;
+            if (!fileName.endsWith('.xlsx')) {
+                alert('請上傳 Excel 文件（.xlsx格式）！');
+                return;
+            }
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                // 解析Excel數據
+                const result = parseExcelData(jsonData);
+                
+                // 顯示結果
+                displayResults(result.data, result.dates);
+                
+            } catch (error) {
+                console.error('Excel解析錯誤:', error);
+                alert('Excel解析失敗！請確認文件格式正確。');
+            }
+        }
+
+        function parseExcelData(jsonData) {
+            const data = {};
+            let dates = {
+                reportDate: '',
+                monthRange: '',
+                yearRange: ''
+            };
+            
+            // 從第一行提取日期資訊
+            if (jsonData.length > 0) {
+                const firstRow = jsonData[0];
+                
+                for (let cell of firstRow) {
+                    if (cell && typeof cell === 'string') {
+                        // 報表日期
+                        const reportDateMatch = cell.match(/(\d{1,2}\/\d{1,2})\s*$/);
+                        if (reportDateMatch && !dates.reportDate) {
+                            dates.reportDate = reportDateMatch[1];
+                        }
+                        
+                        // 月份範圍和年度範圍
+                        const monthRangeMatch = cell.match(/(\d{1,2}\/\d{1,2}~\d{1,2}\/\d{1,2})/);
+                        if (monthRangeMatch) {
+                            const range = monthRangeMatch[1];
+                            if (!range.startsWith('1/1')) {
+                                dates.monthRange = range;
+                            } else {
+                                dates.yearRange = range;
+                            }
                         }
                     }
                 }
             }
-        }
-        
-        // 從第3行開始解析數據（索引 i=2）
-        for (let i = 2; i < jsonData.length; i++) {
-            const row = jsonData[i];
             
-            // 確保行有足夠數據且第1欄不為空
-            if (!row || row.length < 30 || !row[0]) continue; 
-            
-            const cellA = String(row[0]).trim(); // 取得第1欄的文字內容 (索引 0)
-            let storeName = '';
+            // 從第3行開始解析數據（索引 i=2）
+            for (let i = 2; i < jsonData.length; i++) {
+                const row = jsonData[i];
+                
+                // 確保行有足夠數據且第1欄不為空
+                if (!row || row.length < 30 || !row[0]) continue; 
+                
+                const cellA = String(row[0]).trim(); // 取得第1欄的文字內容 (索引 0)
+                let storeName = '';
 
-            // 💡 核心優化：使用關鍵字識別店名 (您的店別抓取邏輯)
-            for (const keyword in storeKeywords) {
-                if (cellA.includes(keyword)) {
-                    storeName = storeKeywords[keyword];
-                    break;
+                // 💡 使用關鍵字識別店名 (優先，解決原本依賴年度目標的問題)
+                for (const keyword in storeKeywords) {
+                    if (cellA.includes(keyword)) {
+                        storeName = storeKeywords[keyword];
+                        break;
+                    }
+                }
+
+                // 只有成功識別到店名才進行數據提取
+                if (storeName) {
+                    const yearTarget = row[2]; // 年度目標
+
+                    data[storeName] = {
+                        // 欄位索引保持不變
+                        yearTarget: yearTarget,
+                        monthTarget: row[3],
+                        monthActual: row[10],
+                        monthEstimate: row[11],
+                        monthEstimateRate: (row[12] * 100).toFixed(2),
+                        monthEstimateDiff: row[13],
+                        lastYearMonth: row[15],
+                        monthGrowthRate: (row[16] * 100).toFixed(2),
+                        monthGrowthAmount: row[17],
+                        monthTargetRate: (row[26] * 100).toFixed(2),
+                        monthTargetDiff: row[27],
+                        yearActual: row[18],
+                        yearEstimate: row[19],
+                        yearEstimateRate: (row[20] * 100).toFixed(2),
+                        yearEstimateDiff: row[21],
+                        lastYearSamePeriod: row[23],
+                        yearGrowthRate: (row[24] * 100).toFixed(2),
+                        yearGrowthAmount: row[25],
+                        yearTargetRate: (row[28] * 100).toFixed(2),
+                        yearTargetDiff: row[29]
+                    };
                 }
             }
             
-            // 只有成功識別到店名才進行數據提取
-            if (storeName) {
-                const yearTarget = row[2];
-                
-                console.log(`✓ 識別到 ${storeName}（從 row[0] 識別，年度目標：${yearTarget}）`);
-                
-                data[storeName] = {
-                    // 欄位索引保持不變
-                    yearTarget: yearTarget,
-                    monthTarget: row[3],
-                    monthActual: row[10],
-                    monthEstimate: row[11],
-                    monthEstimateRate: (row[12] * 100).toFixed(2),
-                    monthEstimateDiff: row[13],
-                    lastYearMonth: row[15],
-                    monthGrowthRate: (row[16] * 100).toFixed(2),
-                    monthGrowthAmount: row[17],
-                    monthTargetRate: (row[26] * 100).toFixed(2),
-                    monthTargetDiff: row[27],
-                    yearActual: row[18],
-                    yearEstimate: row[19],
-                    yearEstimateRate: (row[20] * 100).toFixed(2),
-                    yearEstimateDiff: row[21],
-                    lastYearSamePeriod: row[23],
-                    yearGrowthRate: (row[24] * 100).toFixed(2),
-                    yearGrowthAmount: row[25],
-                    yearTargetRate: (row[28] * 100).toFixed(2),
-                    yearTargetDiff: row[29]
-                };
+            return { data, dates };
+        }
+
+        function displayResults(data, dates) {
+            const monthlyBody = document.getElementById('monthlyBody');
+            const yearlyBody = document.getElementById('yearlyBody');
+            const reportDateBadge = document.getElementById('reportDate');
+            const monthTitle = document.getElementById('monthTitle');
+            const yearTitle = document.getElementById('yearTitle');
+            
+            // 更新日期顯示
+            if (dates.reportDate) {
+                reportDateBadge.textContent = dates.reportDate;
             }
-        }
-        
-        return { data, dates };
-    }
-
-    function displayResults(data, dates) {
-        const monthlyBody = document.getElementById('monthlyBody');
-        const yearlyBody = document.getElementById('yearlyBody');
-        const reportDateBadge = document.getElementById('reportDate');
-        const monthTitle = document.getElementById('monthTitle');
-        const yearTitle = document.getElementById('yearTitle');
-        
-        // 更新日期顯示 (不變)
-        if (dates.reportDate) {
-            reportDateBadge.textContent = dates.reportDate;
-        }
-        if (dates.monthRange) {
-            monthTitle.textContent = `📅 月份數據（${dates.monthRange}）`;
-        }
-        if (dates.yearRange) {
-            yearTitle.textContent = `📈 年度數據（${dates.yearRange}）`;
-        }
-        
-        monthlyBody.innerHTML = '';
-        yearlyBody.innerHTML = '';
-
-        const storeOrder = ['中港店', '中友店', '台中三井店', '耐斯店', '垂楊店'];
-
-        storeOrder.forEach(storeName => {
-            if (data[storeName]) {
-                const d = data[storeName];
-                
-                // 月份數據 (不變)
-                const monthRow = `
-                    <tr>
-                        <td class="store-name">${storeName}</td>
-                        <td>${formatNumber(d.monthTarget)}</td>
-                        <td>${formatNumber(d.monthEstimate)}</td>
-                        <td>${formatNumber(d.monthActual)}</td>
-                        <td>${d.monthEstimateRate}%</td>
-                        <td class="${d.monthEstimateDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(d.monthEstimateDiff)}</td>
-                        <td>${formatNumber(d.lastYearMonth)}</td>
-                        <td class="${parseFloat(d.monthGrowthRate) >= 0 ? 'positive' : 'negative'}">${d.monthGrowthRate}%</td>
-                        <td class="${d.monthGrowthAmount >= 0 ? 'positive' : 'negative'}">${formatNumber(d.monthGrowthAmount)}</td>
-                        <td>${d.monthTargetRate}%</td>
-                        <td class="${d.monthTargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(d.monthTargetDiff)}</td>
-                    </tr>
-                `;
-                monthlyBody.innerHTML += monthRow;
-
-                // 年度數據 (不變)
-                const yearRow = `
-                    <tr>
-                        <td class="store-name">${storeName}</td>
-                        <td>${formatNumber(d.yearTarget)}</td>
-                        <td>${formatNumber(d.yearEstimate)}</td>
-                        <td>${formatNumber(d.yearActual)}</td>
-                        <td>${d.yearEstimateRate}%</td>
-                        <td class="${d.yearEstimateDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(d.yearEstimateDiff)}</td>
-                        <td>${formatNumber(d.lastYearSamePeriod)}</td>
-                        <td class="${parseFloat(d.yearGrowthRate) >= 0 ? 'positive' : 'negative'}">${d.yearGrowthRate}%</td>
-                        <td class="${d.yearGrowthAmount >= 0 ? 'positive' : 'negative'}">${formatNumber(d.yearGrowthAmount)}</td>
-                        <td>${d.yearTargetRate}%</td>
-                        <td class="${d.yearTargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(d.yearTargetDiff)}</td>
-                    </tr>
-                `;
-                yearlyBody.innerHTML += yearRow;
+            if (dates.monthRange) {
+                monthTitle.textContent = `📅 月份數據（${dates.monthRange}）`;
             }
-        });
+            if (dates.yearRange) {
+                yearTitle.textContent = `📈 年度數據（${dates.yearRange}）`;
+            }
+            
+            monthlyBody.innerHTML = '';
+            yearlyBody.innerHTML = '';
 
-        resultsSection.style.display = 'block';
-        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+            const storeOrder = ['中港店', '中友店', '台中三井店', '耐斯店', '垂楊店'];
 
-    function formatNumber(num) {
-        if (num === undefined || num === null) return '0';
-        return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    }
+            storeOrder.forEach(storeName => {
+                if (data[storeName]) {
+                    const d = data[storeName];
+                    
+                    // 月份數據
+                    const monthRow = `
+                        <tr>
+                            <td class="store-name">${storeName}</td>
+                            <td>${formatNumber(d.monthTarget)}</td>
+                            <td>${formatNumber(d.monthEstimate)}</td>
+                            <td>${formatNumber(d.monthActual)}</td>
+                            <td>${d.monthEstimateRate}%</td>
+                            <td class="${d.monthEstimateDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(d.monthEstimateDiff)}</td>
+                            <td>${formatNumber(d.lastYearMonth)}</td>
+                            <td class="${parseFloat(d.monthGrowthRate) >= 0 ? 'positive' : 'negative'}">${d.monthGrowthRate}%</td>
+                            <td class="${d.monthGrowthAmount >= 0 ? 'positive' : 'negative'}">${formatNumber(d.monthGrowthAmount)}</td>
+                            <td>${d.monthTargetRate}%</td>
+                            <td class="${d.monthTargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(d.monthTargetDiff)}</td>
+                        </tr>
+                    `;
+                    monthlyBody.innerHTML += monthRow;
 
-    // 💡 移除或替換 exportToExcel 函數，因為您不需要匯出
-    function exportToExcel() {
-        alert('此功能已停用，因您不需要匯出報表。');
-        // 您也可以將此函數直接移除，並從 HTML 中刪除按鈕
-    }
-</script>
+                    // 年度數據
+                    const yearRow = `
+                        <tr>
+                            <td class="store-name">${storeName}</td>
+                            <td>${formatNumber(d.yearTarget)}</td>
+                            <td>${formatNumber(d.yearEstimate)}</td>
+                            <td>${formatNumber(d.yearActual)}</td>
+                            <td>${d.yearEstimateRate}%</td>
+                            <td class="${d.yearEstimateDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(d.yearEstimateDiff)}</td>
+                            <td>${formatNumber(d.lastYearSamePeriod)}</td>
+                            <td class="${parseFloat(d.yearGrowthRate) >= 0 ? 'positive' : 'negative'}">${d.yearGrowthRate}%</td>
+                            <td class="${d.yearGrowthAmount >= 0 ? 'positive' : 'negative'}">${formatNumber(d.yearGrowthAmount)}</td>
+                            <td>${d.yearTargetRate}%</td>
+                            <td class="${d.yearTargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(d.yearTargetDiff)}</td>
+                        </tr>
+                    `;
+                    yearlyBody.innerHTML += yearRow;
+                }
+            });
+
+            resultsSection.style.display = 'block';
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function formatNumber(num) {
+            if (num === undefined || num === null) return '0';
+            // 確保取整後再格式化
+            return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        // 💡 匯出功能已停用，因應您的需求 (只分析顯示)
+        function exportToExcel() {
+            alert('此功能已停用，請使用網頁上的數據進行分析。');
+        }
+    </script>
+</body>
+</html>
