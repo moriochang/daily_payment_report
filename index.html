@@ -14,7 +14,8 @@
 
         body {
             font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            /* 背景保留，增加現代感 */
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); 
             min-height: 100vh;
             padding: 20px;
             color: #333;
@@ -27,54 +28,56 @@
 
         .header {
             text-align: center;
-            color: white;
+            color: #333; /* 標題文字改為深色 */
             margin-bottom: 20px;
         }
-
+        
+        /* 更改背景後，頂部標題文字改用深藍色強調 */
         .header h1 {
             font-size: 2em;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            color: #1f2937; 
         }
 
         .header p {
             font-size: 1em;
-            opacity: 0.9;
+            color: #4b5563; 
         }
 
         .upload-section {
             background: white;
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
             margin-bottom: 20px;
         }
 
+        /* 上傳區塊強調色改用清爽的藍色 */
         .upload-area {
-            border: 3px dashed #667eea;
+            border: 3px dashed #3b82f6; 
             border-radius: 15px;
             padding: 40px 20px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            background: #f8f9ff;
+            background: #f8fafc;
         }
 
         .upload-area:hover {
-            background: #eef1ff;
-            border-color: #764ba2;
+            background: #eff6ff;
+            border-color: #2563eb;
             transform: scale(1.02);
         }
 
         .upload-area.dragover {
-            background: #e0e7ff;
-            border-color: #4f46e5;
+            background: #dbeafe;
+            border-color: #1d4ed8;
         }
 
         .upload-icon {
             font-size: 3em;
             margin-bottom: 15px;
-            color: #667eea;
+            color: #3b82f6;
         }
 
         .upload-text {
@@ -98,27 +101,28 @@
             background: white;
             border-radius: 20px;
             padding: 40px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
 
         .section-title {
             font-size: 1.8em;
-            color: #333;
+            color: #1f2937;
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 3px solid #667eea;
+            /* 標題底線改為清爽的藍色 */
+            border-bottom: 3px solid #3b82f6; 
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        /* 【修正點 2】日期徽章配色同步：深藍色背景，白色字體 */
+        /* 【優化點 2】今日日期徽章使用強調色 */
         .date-badge {
-            background: #004d99; /* 深藍色 */
+            background: #007bff; /* 標準藍色 */
             color: white; /* 白色字體 */
             padding: 8px 20px;
             border-radius: 25px;
-            font-size: 0.9em; /* 增大字體以配合整體風格 */
+            font-size: 0.9em; 
             font-weight: bold;
             margin-left: auto;
         }
@@ -132,34 +136,35 @@
             width: 100%;
             border-collapse: collapse;
             background: white;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
             border-radius: 10px;
             overflow: hidden;
             min-width: 1200px;
         }
 
-        /* 表頭配色：深藍色白字體 */
+        /* 【優化點 1.1】表頭配色：淺藍灰背景，深藍色字體 */
         thead {
-            background: #004d99;
-            color: white;
+            background: #f0f8ff; /* 淺藍灰 */
+            color: #004d99; /* 深藍色字體 */
         }
         
-        /* 確保第二層標題顏色略深一點以示區分 */
+        /* 【優化點 1.2】第二層標題顏色稍深 */
         thead tr:nth-child(2) {
-            background: #0066cc;
+            background: #e6f0ff; /* 略深的淺藍灰 */
         }
 
         th {
             padding: 18px 12px;
             text-align: center;
             font-weight: 600;
-            border-right: 1px solid rgba(255,255,255,0.3);
+            /* 分隔線改為淺色 */
+            border-right: 1px solid rgba(0,0,0,0.1); 
             white-space: nowrap;
         }
         
-        /* 【修正點 1】增大第一層標題字體 */
+        /* 增大第一層標題字體 */
         thead tr:nth-child(1) th {
-            font-size: 1.1em; /* 增大字體 */
+            font-size: 1.1em;
         }
 
         th:last-child {
@@ -169,7 +174,7 @@
         thead tr:nth-child(2) th {
             padding: 10px 12px;
             font-weight: 400;
-            font-size: 0.9em; /* 保持第二層字體相對小 */
+            font-size: 0.9em;
         }
 
         td {
@@ -180,9 +185,9 @@
             color: #333;
         }
         
-        /* 斑馬紋底色 */
+        /* 斑馬紋底色 - 保持柔和 */
         tbody tr:nth-child(odd) {
-            background-color: #f5f5f5; 
+            background-color: #f9f9f9; 
         }
         
         tbody tr:nth-child(even) {
@@ -200,7 +205,7 @@
         
         .total-row {
             font-weight: 700;
-            background-color: #e0e0e0 !important;
+            background-color: #d1d5db !important; /* 總計行強調 */
             border-top: 3px solid #333;
         }
         
@@ -216,6 +221,7 @@
             padding-left: 20px;
         }
 
+        /* 數值顏色保持一致 */
         .positive {
             color: #10b981;
             font-weight: 600;
@@ -227,7 +233,8 @@
         }
 
         .export-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            /* 按鈕使用強調色 */
+            background: #007bff;
             color: white;
             padding: 15px 40px;
             border: none;
@@ -236,14 +243,15 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
             margin: 20px auto;
             display: block;
         }
-
+        
         .export-btn:hover {
+            background: #0056b3;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.6);
         }
 
         .note {
