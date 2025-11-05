@@ -28,11 +28,10 @@
 
         .header {
             text-align: center;
-            color: #333; /* 標題文字改為深色 */
+            color: #333; 
             margin-bottom: 20px;
         }
         
-        /* 更改背景後，頂部標題文字改用深藍色強調 */
         .header h1 {
             font-size: 2em;
             margin-bottom: 10px;
@@ -52,7 +51,6 @@
             margin-bottom: 20px;
         }
 
-        /* 上傳區塊強調色改用清爽的藍色 */
         .upload-area {
             border: 3px dashed #3b82f6; 
             border-radius: 15px;
@@ -109,17 +107,15 @@
             color: #1f2937;
             margin-bottom: 20px;
             padding-bottom: 10px;
-            /* 標題底線改為清爽的藍色 */
             border-bottom: 3px solid #3b82f6; 
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        /* 【優化點 2】今日日期徽章使用強調色 */
         .date-badge {
-            background: #007bff; /* 標準藍色 */
-            color: white; /* 白色字體 */
+            background: #007bff; /* 標準藍色強調色 */
+            color: white;
             padding: 8px 20px;
             border-radius: 25px;
             font-size: 0.9em; 
@@ -142,22 +138,21 @@
             min-width: 1200px;
         }
 
-        /* 【優化點 1.1】表頭配色：淺藍灰背景，深藍色字體 */
+        /* 【修改點 1.1】表頭配色：淺灰色背景，深色字體 */
         thead {
-            background: #f0f8ff; /* 淺藍灰 */
-            color: #004d99; /* 深藍色字體 */
+            background: #f5f5f5; /* 淺灰色 */
+            color: #333; /* 深色字體 */
         }
         
-        /* 【優化點 1.2】第二層標題顏色稍深 */
+        /* 【修改點 1.2】第二層標題顏色略深 */
         thead tr:nth-child(2) {
-            background: #e6f0ff; /* 略深的淺藍灰 */
+            background: #e9ecef; /* 略深的淺灰 */
         }
 
         th {
             padding: 18px 12px;
             text-align: center;
             font-weight: 600;
-            /* 分隔線改為淺色 */
             border-right: 1px solid rgba(0,0,0,0.1); 
             white-space: nowrap;
         }
@@ -185,11 +180,8 @@
             color: #333;
         }
         
-        /* 斑馬紋底色 - 保持柔和 */
-        tbody tr:nth-child(odd) {
-            background-color: #f9f9f9; 
-        }
-        
+        /* 【修改點 2】數據主體統一使用白色底 */
+        tbody tr:nth-child(odd),
         tbody tr:nth-child(even) {
             background-color: white; 
         }
@@ -199,7 +191,7 @@
         }
 
         tbody tr:hover {
-            background: #eef1ff;
+            background: #f8f9fa; /* 淺淺的懸停效果 */
             transform: scale(1.01);
         }
         
@@ -221,7 +213,6 @@
             padding-left: 20px;
         }
 
-        /* 數值顏色保持一致 */
         .positive {
             color: #10b981;
             font-weight: 600;
@@ -233,7 +224,6 @@
         }
 
         .export-btn {
-            /* 按鈕使用強調色 */
             background: #007bff;
             color: white;
             padding: 15px 40px;
