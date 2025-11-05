@@ -112,9 +112,10 @@
             gap: 10px;
         }
 
+        /* 【修正點 3】日期徽章與新表頭同步為淺藍灰色 */
         .date-badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #D9E2EC; /* 淺藍灰色 */
+            color: #495057; /* 深灰色文字 */
             padding: 8px 20px;
             border-radius: 25px;
             font-size: 0.6em;
@@ -137,15 +138,15 @@
             min-width: 1200px;
         }
 
-        /* 【修正點 1.1】表頭統一使用深灰色系 */
+        /* 【修正點 2.1】表頭統一使用淺藍灰色系 (如圖所示) */
         thead {
-            background: #555; 
-            color: white;
+            background: #D9E2EC; /* 淺藍灰色 */
+            color: #495057; /* 深灰色文字 */
         }
         
-        /* 確保第二層標題顏色簡潔，且與第一層區分 */
+        /* 確保第二層標題顏色更深一點以示區分 */
         thead tr:nth-child(2) {
-            background: #6c757d; 
+            background: #C7D1DC; /* 略深的淺藍灰色 */
         }
 
         th {
@@ -153,7 +154,7 @@
             text-align: center;
             font-weight: 600;
             font-size: 0.9em;
-            border-right: 1px solid rgba(255,255,255,0.3); /* 輕微分隔線 */
+            border-right: 1px solid rgba(0,0,0,0.1); /* 淺色分隔線 */
             white-space: nowrap;
         }
 
@@ -170,10 +171,9 @@
         td {
             padding: 15px 12px;
             text-align: center;
-            /* 淺灰色線條 */
             border: 1px solid #ddd; 
             font-size: 0.95em;
-            color: #333; /* 黑色字體 */
+            color: #333;
         }
         
         /* 斑馬紋底色 */
@@ -194,11 +194,10 @@
             transform: scale(1.01);
         }
         
-        /* 【修正點 1.2】總計行樣式：粗體、深灰色背景 */
         .total-row {
             font-weight: 700;
-            background-color: #e0e0e0 !important; /* 淺深灰色底 */
-            border-top: 3px solid #333; /* 頂部分隔線 */
+            background-color: #e0e0e0 !important;
+            border-top: 3px solid #333;
         }
         
         .total-row td {
@@ -299,7 +298,7 @@
                     <thead>
                         <tr>
                             <th rowspan="2">店名</th>
-                            <th rowspan="2">目標<br><small>(月預估)</small></th>
+                            <th rowspan="2">月目標</th>
                             <th colspan="4">預估</th>
                             <th colspan="3">成長率</th>
                             <th colspan="2">月計</th>
@@ -419,11 +418,7 @@
             }
         }
         
-        /**
-         * 幫助函數：安全地將值轉換為浮點數，如果失敗則返回 0
-         */
         function safeParseFloat(value) {
-            // 由於 CSV 數據可能將數字存儲為字串，這裡確保轉為數字進行計算
             return parseFloat(value) || 0;
         }
 
@@ -461,7 +456,7 @@
                 const row = jsonData[i];
                 if (!row || row.length < 30) continue;
                 
-                const yearTarget = safeParseFloat(row[2]); // 使用 safeParseFloat 確保是數字
+                const yearTarget = safeParseFloat(row[2]);
                 const monthTarget = safeParseFloat(row[3]); 
                 let storeName = null; 
                 
@@ -469,6 +464,8 @@
                 
                 if (hasValidData) {
                     // 使用穩定的行號索引 (i) 進行店別識別
+                    // A6=中港店(i=3), A7=中友店(i=4), A11=耐斯店(i=8), A16=垂楊店(i=13), A20=台中三井店(i=17)
+                    
                     if (i === 3) {
                         storeName = '中港店';
                     } else if (i === 4) {
@@ -534,11 +531,8 @@
 
             const storeOrder = ['中港店', '中友店', '台中三井店', '耐斯店', '垂楊店'];
             
-            // 【修正點 2.1】初始化總計
             const totals = {
-                // Monthly
                 monthTarget: 0, monthActual: 0, monthEstimate: 0, lastYearMonth: 0,
-                // Yearly
                 yearTarget: 0, yearActual: 0, yearEstimate: 0, lastYearSamePeriod: 0
             };
 
@@ -546,7 +540,7 @@
                 if (data[storeName]) {
                     const d = data[storeName];
                     
-                    // 【修正點 2.2】累加總計
+                    // 累加總計
                     totals.monthTarget += d.monthTarget;
                     totals.monthActual += d.monthActual;
                     totals.monthEstimate += d.monthEstimate;
@@ -557,7 +551,7 @@
                     totals.yearEstimate += d.yearEstimate;
                     totals.lastYearSamePeriod += d.lastYearSamePeriod;
                     
-                    // 渲染單行數據 (不變)
+                    // 渲染單行數據
                     const monthRow = `
                         <tr>
                             <td class="store-name">${storeName}</td>
@@ -594,7 +588,7 @@
                 }
             });
             
-            // 【修正點 2.3】計算和渲染總計行 (月份)
+            // 計算和渲染總計行 (月份)
             const M_EstimateRate = totals.monthEstimate > 0 ? (totals.monthActual / totals.monthEstimate) * 100 : 0;
             const M_EstimateDiff = totals.monthEstimate - totals.monthActual;
             const M_GrowthRate = totals.lastYearMonth > 0 ? (totals.monthActual / totals.lastYearMonth - 1) * 100 : 0;
@@ -619,7 +613,7 @@
             `;
             monthlyBody.innerHTML += totalMonthRow; 
 
-            // 【修正點 2.4】計算和渲染總計行 (年度)
+            // 計算和渲染總計行 (年度)
             const Y_EstimateRate = totals.yearEstimate > 0 ? (totals.yearActual / totals.yearEstimate) * 100 : 0;
             const Y_EstimateDiff = totals.yearEstimate - totals.yearActual;
             const Y_GrowthRate = totals.lastYearSamePeriod > 0 ? (totals.yearActual / totals.lastYearSamePeriod - 1) * 100 : 0;
@@ -659,9 +653,8 @@
             
             // 匯出月份數據
             csv += '月份數據\n';
-            csv += '店名,目標,預估業績,實績,達成率,差距,去年同期,成長比,成長金額,達成率,目標差距\n';
+            csv += '店名,月目標,預估業績,實績,達成率,差距,去年同期,成長比,成長金額,達成率,目標差距\n';
             
-            // 由於總計行也已添加到 monthlyBody 中，這裡可以確保匯出包含總計數據
             const monthlyRows = document.querySelectorAll('#monthlyBody tr');
             monthlyRows.forEach(row => {
                 const cells = row.querySelectorAll('td');
@@ -673,7 +666,6 @@
             csv += '\n年度數據\n';
             csv += '店名,年度目標,預估業績,實績,達成率,差距,同期實績,成長比,成長金額,達成率,目標差距\n';
             
-            // 由於總計行也已添加到 yearlyBody 中，這裡可以確保匯出包含總計數據
             const yearlyRows = document.querySelectorAll('#yearlyBody tr');
             yearlyRows.forEach(row => {
                 const cells = row.querySelectorAll('td');
