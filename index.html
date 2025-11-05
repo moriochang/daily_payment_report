@@ -17,7 +17,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
-            color: #333; /* 預設文字顏色 */
+            color: #333;
         }
 
         .container {
@@ -137,9 +137,15 @@
             min-width: 1200px;
         }
 
+        /* 【修正點 1.1】表頭統一使用深灰色系 */
         thead {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #555; 
             color: white;
+        }
+        
+        /* 確保第二層標題顏色簡潔，且與第一層區分 */
+        thead tr:nth-child(2) {
+            background: #6c757d; 
         }
 
         th {
@@ -147,7 +153,7 @@
             text-align: center;
             font-weight: 600;
             font-size: 0.9em;
-            border-right: 1px solid rgba(255,255,255,0.2);
+            border-right: 1px solid rgba(255,255,255,0.3); /* 輕微分隔線 */
             white-space: nowrap;
         }
 
@@ -164,19 +170,19 @@
         td {
             padding: 15px 12px;
             text-align: center;
-            /* 調整表格線顏色，使其更明顯 */
+            /* 淺灰色線條 */
             border: 1px solid #ddd; 
             font-size: 0.95em;
-            color: #333; /* 確保內容是黑色文字 */
+            color: #333; /* 黑色字體 */
         }
         
-        /* 實現淺灰色底的斑馬紋效果，方便識別 */
+        /* 斑馬紋底色 */
         tbody tr:nth-child(odd) {
-            background-color: #f5f5f5; /* 淺灰色底 */
+            background-color: #f5f5f5; 
         }
         
         tbody tr:nth-child(even) {
-            background-color: white; /* 白色底 */
+            background-color: white; 
         }
 
         tbody tr {
@@ -187,10 +193,22 @@
             background: #eef1ff;
             transform: scale(1.01);
         }
+        
+        /* 【修正點 1.2】總計行樣式：粗體、深灰色背景 */
+        .total-row {
+            font-weight: 700;
+            background-color: #e0e0e0 !important; /* 淺深灰色底 */
+            border-top: 3px solid #333; /* 頂部分隔線 */
+        }
+        
+        .total-row td {
+            color: #111;
+            border: 1px solid #ccc;
+        }
 
         .store-name {
             font-weight: 700;
-            color: #333; /* 保持店名為黑色 */
+            color: #333;
             text-align: left;
             padding-left: 20px;
         }
@@ -400,6 +418,14 @@
                 alert('Excel解析失敗！請確認文件格式正確。');
             }
         }
+        
+        /**
+         * 幫助函數：安全地將值轉換為浮點數，如果失敗則返回 0
+         */
+        function safeParseFloat(value) {
+            // 由於 CSV 數據可能將數字存儲為字串，這裡確保轉為數字進行計算
+            return parseFloat(value) || 0;
+        }
 
         function parseExcelData(jsonData) {
             const data = {};
@@ -409,16 +435,15 @@
                 yearRange: ''
             };
             
+            // ... (日期解析邏輯不變) ...
             if (jsonData.length > 0) {
                 const firstRow = jsonData[0];
-                
                 for (let cell of firstRow) {
                     if (cell && typeof cell === 'string') {
                         const reportDateMatch = cell.match(/(\d{1,2}\/\d{1,2})\s*$/);
                         if (reportDateMatch && !dates.reportDate) {
                             dates.reportDate = reportDateMatch[1];
                         }
-                        
                         const monthRangeMatch = cell.match(/(\d{1,2}\/\d{1,2}~\d{1,2}\/\d{1,2})/);
                         if (monthRangeMatch) {
                             const range = monthRangeMatch[1];
@@ -436,16 +461,14 @@
                 const row = jsonData[i];
                 if (!row || row.length < 30) continue;
                 
-                const yearTarget = row[2];
-                const monthTarget = row[3]; 
+                const yearTarget = safeParseFloat(row[2]); // 使用 safeParseFloat 確保是數字
+                const monthTarget = safeParseFloat(row[3]); 
                 let storeName = null; 
                 
                 const hasValidData = yearTarget > 0 || monthTarget > 0;
                 
                 if (hasValidData) {
                     // 使用穩定的行號索引 (i) 進行店別識別
-                    // A6=中港店(i=3), A7=中友店(i=4), A11=耐斯店(i=8), A16=垂楊店(i=13), A20=台中三井店(i=17)
-                    
                     if (i === 3) {
                         storeName = '中港店';
                     } else if (i === 4) {
@@ -463,25 +486,25 @@
                     
                     data[storeName] = {
                         yearTarget: yearTarget,
-                        monthTarget: row[3],
-                        monthActual: row[10],
-                        monthEstimate: row[11],
-                        monthEstimateRate: (row[12] * 100).toFixed(2),
-                        monthEstimateDiff: row[13],
-                        lastYearMonth: row[15],
-                        monthGrowthRate: (row[16] * 100).toFixed(2),
-                        monthGrowthAmount: row[17],
-                        monthTargetRate: (row[26] * 100).toFixed(2),
-                        monthTargetDiff: row[27],
-                        yearActual: row[18],
-                        yearEstimate: row[19],
-                        yearEstimateRate: (row[20] * 100).toFixed(2),
-                        yearEstimateDiff: row[21],
-                        lastYearSamePeriod: row[23],
-                        yearGrowthRate: (row[24] * 100).toFixed(2),
-                        yearGrowthAmount: row[25],
-                        yearTargetRate: (row[28] * 100).toFixed(2),
-                        yearTargetDiff: row[29]
+                        monthTarget: monthTarget,
+                        monthActual: safeParseFloat(row[10]),
+                        monthEstimate: safeParseFloat(row[11]),
+                        monthEstimateRate: (safeParseFloat(row[12]) * 100).toFixed(2),
+                        monthEstimateDiff: safeParseFloat(row[13]),
+                        lastYearMonth: safeParseFloat(row[15]),
+                        monthGrowthRate: (safeParseFloat(row[16]) * 100).toFixed(2),
+                        monthGrowthAmount: safeParseFloat(row[17]),
+                        monthTargetRate: (safeParseFloat(row[26]) * 100).toFixed(2),
+                        monthTargetDiff: safeParseFloat(row[27]),
+                        yearActual: safeParseFloat(row[18]),
+                        yearEstimate: safeParseFloat(row[19]),
+                        yearEstimateRate: (safeParseFloat(row[20]) * 100).toFixed(2),
+                        yearEstimateDiff: safeParseFloat(row[21]),
+                        lastYearSamePeriod: safeParseFloat(row[23]),
+                        yearGrowthRate: (safeParseFloat(row[24]) * 100).toFixed(2),
+                        yearGrowthAmount: safeParseFloat(row[25]),
+                        yearTargetRate: (safeParseFloat(row[28]) * 100).toFixed(2),
+                        yearTargetDiff: safeParseFloat(row[29])
                     };
                 }
             }
@@ -510,12 +533,31 @@
             yearlyBody.innerHTML = '';
 
             const storeOrder = ['中港店', '中友店', '台中三井店', '耐斯店', '垂楊店'];
+            
+            // 【修正點 2.1】初始化總計
+            const totals = {
+                // Monthly
+                monthTarget: 0, monthActual: 0, monthEstimate: 0, lastYearMonth: 0,
+                // Yearly
+                yearTarget: 0, yearActual: 0, yearEstimate: 0, lastYearSamePeriod: 0
+            };
 
             storeOrder.forEach(storeName => {
                 if (data[storeName]) {
                     const d = data[storeName];
                     
-                    // 月份數據 (順序已匹配新的表頭)
+                    // 【修正點 2.2】累加總計
+                    totals.monthTarget += d.monthTarget;
+                    totals.monthActual += d.monthActual;
+                    totals.monthEstimate += d.monthEstimate;
+                    totals.lastYearMonth += d.lastYearMonth;
+                    
+                    totals.yearTarget += d.yearTarget;
+                    totals.yearActual += d.yearActual;
+                    totals.yearEstimate += d.yearEstimate;
+                    totals.lastYearSamePeriod += d.lastYearSamePeriod;
+                    
+                    // 渲染單行數據 (不變)
                     const monthRow = `
                         <tr>
                             <td class="store-name">${storeName}</td>
@@ -533,7 +575,6 @@
                     `;
                     monthlyBody.innerHTML += monthRow;
 
-                    // 年度數據 (順序已匹配新的表頭)
                     const yearRow = `
                         <tr>
                             <td class="store-name">${storeName}</td>
@@ -552,6 +593,57 @@
                     yearlyBody.innerHTML += yearRow;
                 }
             });
+            
+            // 【修正點 2.3】計算和渲染總計行 (月份)
+            const M_EstimateRate = totals.monthEstimate > 0 ? (totals.monthActual / totals.monthEstimate) * 100 : 0;
+            const M_EstimateDiff = totals.monthEstimate - totals.monthActual;
+            const M_GrowthRate = totals.lastYearMonth > 0 ? (totals.monthActual / totals.lastYearMonth - 1) * 100 : 0;
+            const M_GrowthAmount = totals.monthActual - totals.lastYearMonth;
+            const M_TargetRate = totals.monthTarget > 0 ? (totals.monthActual / totals.monthTarget) * 100 : 0;
+            const M_TargetDiff = totals.monthActual - totals.monthTarget;
+
+            const totalMonthRow = `
+                <tr class="total-row">
+                    <td class="store-name">總計</td>
+                    <td>${formatNumber(totals.monthTarget)}</td>
+                    <td>${formatNumber(totals.monthEstimate)}</td>
+                    <td>${formatNumber(totals.monthActual)}</td>
+                    <td>${M_EstimateRate.toFixed(2)}%</td>
+                    <td class="${M_EstimateDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(M_EstimateDiff)}</td>
+                    <td>${formatNumber(totals.lastYearMonth)}</td>
+                    <td class="${M_GrowthRate >= 0 ? 'positive' : 'negative'}">${M_GrowthRate.toFixed(2)}%</td>
+                    <td class="${M_GrowthAmount >= 0 ? 'positive' : 'negative'}">${formatNumber(M_GrowthAmount)}</td>
+                    <td>${M_TargetRate.toFixed(2)}%</td>
+                    <td class="${M_TargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(M_TargetDiff)}</td>
+                </tr>
+            `;
+            monthlyBody.innerHTML += totalMonthRow; 
+
+            // 【修正點 2.4】計算和渲染總計行 (年度)
+            const Y_EstimateRate = totals.yearEstimate > 0 ? (totals.yearActual / totals.yearEstimate) * 100 : 0;
+            const Y_EstimateDiff = totals.yearEstimate - totals.yearActual;
+            const Y_GrowthRate = totals.lastYearSamePeriod > 0 ? (totals.yearActual / totals.lastYearSamePeriod - 1) * 100 : 0;
+            const Y_GrowthAmount = totals.yearActual - totals.lastYearSamePeriod;
+            const Y_TargetRate = totals.yearTarget > 0 ? (totals.yearActual / totals.yearTarget) * 100 : 0;
+            const Y_TargetDiff = totals.yearActual - totals.yearTarget;
+
+            const totalYearRow = `
+                <tr class="total-row">
+                    <td class="store-name">總計</td>
+                    <td>${formatNumber(totals.yearTarget)}</td>
+                    <td>${formatNumber(totals.yearEstimate)}</td>
+                    <td>${formatNumber(totals.yearActual)}</td>
+                    <td>${Y_EstimateRate.toFixed(2)}%</td>
+                    <td class="${Y_EstimateDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(Y_EstimateDiff)}</td>
+                    <td>${formatNumber(totals.lastYearSamePeriod)}</td>
+                    <td class="${Y_GrowthRate >= 0 ? 'positive' : 'negative'}">${Y_GrowthRate.toFixed(2)}%</td>
+                    <td class="${Y_GrowthAmount >= 0 ? 'positive' : 'negative'}">${formatNumber(Y_GrowthAmount)}</td>
+                    <td>${Y_TargetRate.toFixed(2)}%</td>
+                    <td class="${Y_TargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(Y_TargetDiff)}</td>
+                </tr>
+            `;
+            yearlyBody.innerHTML += totalYearRow; 
+
 
             resultsSection.style.display = 'block';
             resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -567,22 +659,21 @@
             
             // 匯出月份數據
             csv += '月份數據\n';
-            // CSV 標頭，匹配新的表格結構
             csv += '店名,目標,預估業績,實績,達成率,差距,去年同期,成長比,成長金額,達成率,目標差距\n';
             
+            // 由於總計行也已添加到 monthlyBody 中，這裡可以確保匯出包含總計數據
             const monthlyRows = document.querySelectorAll('#monthlyBody tr');
             monthlyRows.forEach(row => {
                 const cells = row.querySelectorAll('td');
-                // 移除逗號和百分號，確保數據可計算
                 const rowData = Array.from(cells).map(cell => cell.textContent.trim().replace(/,/g, '').replace(/%/g, '')); 
                 csv += rowData.join(',') + '\n';
             });
 
             // 匯出年度數據
             csv += '\n年度數據\n';
-            // CSV 標頭，匹配新的表格結構
             csv += '店名,年度目標,預估業績,實績,達成率,差距,同期實績,成長比,成長金額,達成率,目標差距\n';
             
+            // 由於總計行也已添加到 yearlyBody 中，這裡可以確保匯出包含總計數據
             const yearlyRows = document.querySelectorAll('#yearlyBody tr');
             yearlyRows.forEach(row => {
                 const cells = row.querySelectorAll('td');
