@@ -112,10 +112,10 @@
             gap: 10px;
         }
 
-        /* 【修正點 3】日期徽章與新表頭同步為淺藍灰色 */
+        /* 日期徽章與表頭同步 */
         .date-badge {
-            background: #D9E2EC; /* 淺藍灰色 */
-            color: #495057; /* 深灰色文字 */
+            background: #D9E2EC;
+            color: #495057;
             padding: 8px 20px;
             border-radius: 25px;
             font-size: 0.6em;
@@ -138,15 +138,15 @@
             min-width: 1200px;
         }
 
-        /* 【修正點 2.1】表頭統一使用淺藍灰色系 (如圖所示) */
+        /* 【修正點 2.1】表頭統一使用深藍色白字體 */
         thead {
-            background: #D9E2EC; /* 淺藍灰色 */
-            color: #495057; /* 深灰色文字 */
+            background: #004d99; /* 深藍色 */
+            color: white;
         }
         
-        /* 確保第二層標題顏色更深一點以示區分 */
+        /* 確保第二層標題顏色略深一點以示區分 */
         thead tr:nth-child(2) {
-            background: #C7D1DC; /* 略深的淺藍灰色 */
+            background: #0066cc; /* 略深藍色 */
         }
 
         th {
@@ -154,7 +154,7 @@
             text-align: center;
             font-weight: 600;
             font-size: 0.9em;
-            border-right: 1px solid rgba(0,0,0,0.1); /* 淺色分隔線 */
+            border-right: 1px solid rgba(255,255,255,0.3); /* 白色分隔線 */
             white-space: nowrap;
         }
 
@@ -419,6 +419,7 @@
         }
         
         function safeParseFloat(value) {
+            // 由於 CSV 數據可能將數字存儲為字串，這裡確保轉為數字進行計算
             return parseFloat(value) || 0;
         }
 
@@ -464,8 +465,6 @@
                 
                 if (hasValidData) {
                     // 使用穩定的行號索引 (i) 進行店別識別
-                    // A6=中港店(i=3), A7=中友店(i=4), A11=耐斯店(i=8), A16=垂楊店(i=13), A20=台中三井店(i=17)
-                    
                     if (i === 3) {
                         storeName = '中港店';
                     } else if (i === 4) {
@@ -481,27 +480,39 @@
                 
                 if (storeName) {
                     
+                    // 提取所有需要的原始數字
+                    const M_Actual = safeParseFloat(row[10]);
+                    const M_Estimate = safeParseFloat(row[11]);
+                    const Y_Actual = safeParseFloat(row[18]);
+                    const Y_Estimate = safeParseFloat(row[19]);
+                    
                     data[storeName] = {
                         yearTarget: yearTarget,
                         monthTarget: monthTarget,
-                        monthActual: safeParseFloat(row[10]),
-                        monthEstimate: safeParseFloat(row[11]),
+                        
+                        monthActual: M_Actual,
+                        monthEstimate: M_Estimate,
                         monthEstimateRate: (safeParseFloat(row[12]) * 100).toFixed(2),
-                        monthEstimateDiff: safeParseFloat(row[13]),
+                        // 【修正點 1.1】重新計算：實績 - 預估業績
+                        monthEstimateDiff: M_Actual - M_Estimate, 
+                        
                         lastYearMonth: safeParseFloat(row[15]),
                         monthGrowthRate: (safeParseFloat(row[16]) * 100).toFixed(2),
                         monthGrowthAmount: safeParseFloat(row[17]),
                         monthTargetRate: (safeParseFloat(row[26]) * 100).toFixed(2),
-                        monthTargetDiff: safeParseFloat(row[27]),
-                        yearActual: safeParseFloat(row[18]),
-                        yearEstimate: safeParseFloat(row[19]),
+                        monthTargetDiff: safeParseFloat(row[27]), // 這邊用原始數據，因為這是目標差異，不是預估差異
+                        
+                        yearActual: Y_Actual,
+                        yearEstimate: Y_Estimate,
                         yearEstimateRate: (safeParseFloat(row[20]) * 100).toFixed(2),
-                        yearEstimateDiff: safeParseFloat(row[21]),
+                        // 【修正點 1.2】重新計算：實績 - 預估業績
+                        yearEstimateDiff: Y_Actual - Y_Estimate, 
+                        
                         lastYearSamePeriod: safeParseFloat(row[23]),
                         yearGrowthRate: (safeParseFloat(row[24]) * 100).toFixed(2),
                         yearGrowthAmount: safeParseFloat(row[25]),
                         yearTargetRate: (safeParseFloat(row[28]) * 100).toFixed(2),
-                        yearTargetDiff: safeParseFloat(row[29])
+                        yearTargetDiff: safeParseFloat(row[29]) // 這邊用原始數據
                     };
                 }
             }
@@ -590,7 +601,8 @@
             
             // 計算和渲染總計行 (月份)
             const M_EstimateRate = totals.monthEstimate > 0 ? (totals.monthActual / totals.monthEstimate) * 100 : 0;
-            const M_EstimateDiff = totals.monthEstimate - totals.monthActual;
+            // 【修正點 1.5】總計差異計算：實績 - 預估業績
+            const M_EstimateDiff = totals.monthActual - totals.monthEstimate; 
             const M_GrowthRate = totals.lastYearMonth > 0 ? (totals.monthActual / totals.lastYearMonth - 1) * 100 : 0;
             const M_GrowthAmount = totals.monthActual - totals.lastYearMonth;
             const M_TargetRate = totals.monthTarget > 0 ? (totals.monthActual / totals.monthTarget) * 100 : 0;
@@ -615,7 +627,8 @@
 
             // 計算和渲染總計行 (年度)
             const Y_EstimateRate = totals.yearEstimate > 0 ? (totals.yearActual / totals.yearEstimate) * 100 : 0;
-            const Y_EstimateDiff = totals.yearEstimate - totals.yearActual;
+            // 【修正點 1.6】總計差異計算：實績 - 預估業績
+            const Y_EstimateDiff = totals.yearActual - totals.yearEstimate; 
             const Y_GrowthRate = totals.lastYearSamePeriod > 0 ? (totals.yearActual / totals.lastYearSamePeriod - 1) * 100 : 0;
             const Y_GrowthAmount = totals.yearActual - totals.lastYearSamePeriod;
             const Y_TargetRate = totals.yearTarget > 0 ? (totals.yearActual / totals.yearTarget) * 100 : 0;
@@ -658,6 +671,7 @@
             const monthlyRows = document.querySelectorAll('#monthlyBody tr');
             monthlyRows.forEach(row => {
                 const cells = row.querySelectorAll('td');
+                // 移除格式符號，確保 CSV 數據為純淨數字
                 const rowData = Array.from(cells).map(cell => cell.textContent.trim().replace(/,/g, '').replace(/%/g, '')); 
                 csv += rowData.join(',') + '\n';
             });
