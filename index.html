@@ -17,6 +17,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            color: #333; /* 預設文字顏色 */
         }
 
         .container {
@@ -133,7 +134,7 @@
             box-shadow: 0 2px 15px rgba(0,0,0,0.1);
             border-radius: 10px;
             overflow: hidden;
-            min-width: 1200px; /* 確保表格不會因內容過少而變窄 */
+            min-width: 1200px;
         }
 
         thead {
@@ -147,14 +148,13 @@
             font-weight: 600;
             font-size: 0.9em;
             border-right: 1px solid rgba(255,255,255,0.2);
-            white-space: nowrap; /* 確保標題不換行 */
+            white-space: nowrap;
         }
 
         th:last-child {
             border-right: none;
         }
         
-        /* 讓第二層標題小一點 */
         thead tr:nth-child(2) th {
             padding: 10px 12px;
             font-weight: 400;
@@ -164,8 +164,19 @@
         td {
             padding: 15px 12px;
             text-align: center;
-            border-bottom: 1px solid #e5e7eb;
+            /* 調整表格線顏色，使其更明顯 */
+            border: 1px solid #ddd; 
             font-size: 0.95em;
+            color: #333; /* 確保內容是黑色文字 */
+        }
+        
+        /* 實現淺灰色底的斑馬紋效果，方便識別 */
+        tbody tr:nth-child(odd) {
+            background-color: #f5f5f5; /* 淺灰色底 */
+        }
+        
+        tbody tr:nth-child(even) {
+            background-color: white; /* 白色底 */
         }
 
         tbody tr {
@@ -173,17 +184,13 @@
         }
 
         tbody tr:hover {
-            background: #f8f9ff;
+            background: #eef1ff;
             transform: scale(1.01);
-        }
-
-        tbody tr:last-child td {
-            border-bottom: none;
         }
 
         .store-name {
             font-weight: 700;
-            color: #667eea;
+            color: #333; /* 保持店名為黑色 */
             text-align: left;
             padding-left: 20px;
         }
@@ -365,7 +372,7 @@
 
         // 文件選擇
         fileInput.addEventListener('change', (e) => {
-            if (e.target.files.files.length > 0) {
+            if (e.target.files.length > 0) {
                 handleFile(e.target.files[0]);
             }
         });
@@ -384,10 +391,8 @@
                 const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                 
-                // 解析Excel數據
                 const result = parseExcelData(jsonData);
                 
-                // 顯示結果
                 displayResults(result.data, result.dates);
                 
             } catch (error) {
@@ -404,19 +409,16 @@
                 yearRange: ''
             };
             
-            // 從第一行提取日期資訊
             if (jsonData.length > 0) {
                 const firstRow = jsonData[0];
                 
                 for (let cell of firstRow) {
                     if (cell && typeof cell === 'string') {
-                        // 報表日期
                         const reportDateMatch = cell.match(/(\d{1,2}\/\d{1,2})\s*$/);
                         if (reportDateMatch && !dates.reportDate) {
                             dates.reportDate = reportDateMatch[1];
                         }
                         
-                        // 月份範圍和年度範圍
                         const monthRangeMatch = cell.match(/(\d{1,2}\/\d{1,2}~\d{1,2}\/\d{1,2})/);
                         if (monthRangeMatch) {
                             const range = monthRangeMatch[1];
@@ -430,23 +432,18 @@
                 }
             }
             
-            // 從第3行開始解析數據（Excel A1 = 索引 0）
-            // i = 2 是 CSV 的第 3 行，對應 Excel 的 A3
             for (let i = 2; i < jsonData.length; i++) {
                 const row = jsonData[i];
-                // 檢查行數據完整性
                 if (!row || row.length < 30) continue;
                 
                 const yearTarget = row[2];
                 const monthTarget = row[3]; 
                 let storeName = null; 
                 
-                // 檢查當前行是否有有效數據
                 const hasValidData = yearTarget > 0 || monthTarget > 0;
                 
                 if (hasValidData) {
-                    // 【修正後的店別識別：只使用行號定位目標店別】
-                    // Excel 行號對應 (從 0 開始, 標題佔 2 行):
+                    // 使用穩定的行號索引 (i) 進行店別識別
                     // A6=中港店(i=3), A7=中友店(i=4), A11=耐斯店(i=8), A16=垂楊店(i=13), A20=台中三井店(i=17)
                     
                     if (i === 3) {
@@ -462,7 +459,6 @@
                     }
                 }
                 
-                // 只有當 storeName 被成功定義為目標店別時，才進行數據存儲
                 if (storeName) {
                     
                     data[storeName] = {
@@ -500,7 +496,6 @@
             const monthTitle = document.getElementById('monthTitle');
             const yearTitle = document.getElementById('yearTitle');
             
-            // 更新日期顯示
             if (dates.reportDate) {
                 reportDateBadge.textContent = dates.reportDate;
             }
@@ -520,7 +515,7 @@
                 if (data[storeName]) {
                     const d = data[storeName];
                     
-                    // 月份數據 (根據新的表頭順序調整)
+                    // 月份數據 (順序已匹配新的表頭)
                     const monthRow = `
                         <tr>
                             <td class="store-name">${storeName}</td>
@@ -538,7 +533,7 @@
                     `;
                     monthlyBody.innerHTML += monthRow;
 
-                    // 年度數據 (根據新的表頭順序調整)
+                    // 年度數據 (順序已匹配新的表頭)
                     const yearRow = `
                         <tr>
                             <td class="store-name">${storeName}</td>
@@ -564,7 +559,6 @@
 
         function formatNumber(num) {
             if (num === undefined || num === null || isNaN(num)) return '0';
-            // 將數字四捨五入到整數並加入千位分隔符
             return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         }
 
@@ -573,25 +567,26 @@
             
             // 匯出月份數據
             csv += '月份數據\n';
-            // 新的 CSV 標頭，匹配新的表格結構
+            // CSV 標頭，匹配新的表格結構
             csv += '店名,目標,預估業績,實績,達成率,差距,去年同期,成長比,成長金額,達成率,目標差距\n';
             
             const monthlyRows = document.querySelectorAll('#monthlyBody tr');
             monthlyRows.forEach(row => {
                 const cells = row.querySelectorAll('td');
-                const rowData = Array.from(cells).map(cell => cell.textContent.trim().replace(/,/g, '').replace(/%/g, '')); // 移除逗號和百分號
+                // 移除逗號和百分號，確保數據可計算
+                const rowData = Array.from(cells).map(cell => cell.textContent.trim().replace(/,/g, '').replace(/%/g, '')); 
                 csv += rowData.join(',') + '\n';
             });
 
             // 匯出年度數據
             csv += '\n年度數據\n';
-            // 新的 CSV 標頭，匹配新的表格結構
+            // CSV 標頭，匹配新的表格結構
             csv += '店名,年度目標,預估業績,實績,達成率,差距,同期實績,成長比,成長金額,達成率,目標差距\n';
             
             const yearlyRows = document.querySelectorAll('#yearlyBody tr');
             yearlyRows.forEach(row => {
                 const cells = row.querySelectorAll('td');
-                const rowData = Array.from(cells).map(cell => cell.textContent.trim().replace(/,/g, '').replace(/%/g, '')); // 移除逗號和百分號
+                const rowData = Array.from(cells).map(cell => cell.textContent.trim().replace(/,/g, '').replace(/%/g, '')); 
                 csv += rowData.join(',') + '\n';
             });
 
