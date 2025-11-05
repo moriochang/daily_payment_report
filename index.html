@@ -133,6 +133,7 @@
             box-shadow: 0 2px 15px rgba(0,0,0,0.1);
             border-radius: 10px;
             overflow: hidden;
+            min-width: 1200px; /* 確保表格不會因內容過少而變窄 */
         }
 
         thead {
@@ -146,10 +147,18 @@
             font-weight: 600;
             font-size: 0.9em;
             border-right: 1px solid rgba(255,255,255,0.2);
+            white-space: nowrap; /* 確保標題不換行 */
         }
 
         th:last-child {
             border-right: none;
+        }
+        
+        /* 讓第二層標題小一點 */
+        thead tr:nth-child(2) th {
+            padding: 10px 12px;
+            font-weight: 400;
+            font-size: 0.85em;
         }
 
         td {
@@ -249,7 +258,7 @@
             <div class="upload-area" id="uploadArea">
                 <div class="upload-icon">📈</div>
                 <div class="upload-text">拖曳Excel文件至此處</div>
-                <div class="upload-hint">或點擊選擇文件(支持 .xlsx 格式)</div>
+                <div class="upload-hint">或點擊選擇文件（支援 .xlsx 格式）</div>
             </div>
             <input type="file" id="fileInput" accept=".xlsx">
         </div>
@@ -264,16 +273,21 @@
                 <table id="monthlyTable">
                     <thead>
                         <tr>
-                            <th>店名</th>
-                            <th>目標<br><small>(月預估)</small></th>
+                            <th rowspan="2">店名</th>
+                            <th rowspan="2">目標<br><small>(月預估)</small></th>
+                            <th colspan="4">預估</th>
+                            <th colspan="3">成長率</th>
+                            <th colspan="2">月計</th>
+                        </tr>
+                        <tr>
                             <th>預估業績<br><small>(月別)</small></th>
                             <th>實績<br><small>(月別)</small></th>
-                            <th>預估達成率<br><small>(月別)</small></th>
-                            <th>預估差距<br><small>(月別)</small></th>
+                            <th>達成率<br><small>(月別)</small></th>
+                            <th>差距<br><small>(月別)</small></th>
                             <th>去年同期</th>
                             <th>成長比</th>
                             <th>成長金額</th>
-                            <th>月計達成率<br><small>(月別)</small></th>
+                            <th>達成率<br><small>(月別)</small></th>
                             <th>目標差距<br><small>(月別)</small></th>
                         </tr>
                     </thead>
@@ -290,16 +304,21 @@
                 <table id="yearlyTable">
                     <thead>
                         <tr>
-                            <th>店名</th>
-                            <th>年度目標</th>
+                            <th rowspan="2">店名</th>
+                            <th rowspan="2">年度目標</th>
+                            <th colspan="4">預估</th>
+                            <th colspan="3">成長率</th>
+                            <th colspan="2">年計</th>
+                        </tr>
+                        <tr>
                             <th>預估業績<br><small>(年計)</small></th>
                             <th>實績<br><small>(年計)</small></th>
-                            <th>預估達成率<br><small>(年計)</small></th>
-                            <th>預估差距<br><small>(年計)</small></th>
+                            <th>達成率<br><small>(年計)</small></th>
+                            <th>差距<br><small>(年計)</small></th>
                             <th>同期實績<br><small>(去年)</small></th>
                             <th>成長比</th>
                             <th>成長金額</th>
-                            <th>月計達成率<br><small>(年度)</small></th>
+                            <th>達成率<br><small>(年度)</small></th>
                             <th>目標差距<br><small>(年度)</small></th>
                         </tr>
                     </thead>
@@ -308,23 +327,16 @@
                 </table>
             </div>
 
-            <button class="export-btn" onclick="exportToExcel()">💾 匯出至Excel</button>
+            <button class="export-btn" onclick="exportToExcel()">📥 匯出至Excel</button>
 
             <div class="note">
-                <strong>💡 提示:</strong> 數據已自動提取並整理完成。綠色數字表示正成長,紅色數字表示負成長。
+                <strong>💡 提示：</strong> 數據已自動提取並整理完成。綠色數字表示正成長，紅色數字表示負成長。
             </div>
         </div>
     </div>
 
     <script>
-        // 店鋪年度目標映射(耐斯店除外，因為有重複)
-        const storeYearTargets = {
-            425500: '中港店',
-            280000: '中友店',
-            85000: '台中三井店',
-            120000: '垂楊店'
-        };
-
+        
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const resultsSection = document.getElementById('resultsSection');
@@ -353,7 +365,7 @@
 
         // 文件選擇
         fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
+            if (e.target.files.files.length > 0) {
                 handleFile(e.target.files[0]);
             }
         });
@@ -362,7 +374,7 @@
             const fileName = file.name.toLowerCase();
             
             if (!fileName.endsWith('.xlsx')) {
-                alert('請上傳 Excel 文件(.xlsx格式)!');
+                alert('請上傳 Excel 文件（.xlsx格式）！');
                 return;
             }
 
@@ -380,7 +392,7 @@
                 
             } catch (error) {
                 console.error('Excel解析錯誤:', error);
-                alert('Excel解析失敗!請確認文件格式正確。');
+                alert('Excel解析失敗！請確認文件格式正確。');
             }
         }
 
@@ -418,27 +430,41 @@
                 }
             }
             
-            // 從第3行開始解析數據(前2行是標題)
+            // 從第3行開始解析數據（Excel A1 = 索引 0）
+            // i = 2 是 CSV 的第 3 行，對應 Excel 的 A3
             for (let i = 2; i < jsonData.length; i++) {
                 const row = jsonData[i];
+                // 檢查行數據完整性
                 if (!row || row.length < 30) continue;
                 
                 const yearTarget = row[2];
-                let storeName = null;
+                const monthTarget = row[3]; 
+                let storeName = null; 
                 
-                // 優先用行號識別耐斯店 (A11 = jsonData[10])
-                if (i === 10) {
-                    storeName = '耐斯店';
-                    console.log(`✓ 識別到 ${storeName} (Excel行號:A${i+1}, 陣列索引:${i}, 年度目標:${yearTarget}, 月目標:${row[3]})`);
-                } else {
-                    // 其他店用年度目標識別
-                    storeName = storeYearTargets[yearTarget];
-                    if (storeName) {
-                        console.log(`✓ 識別到 ${storeName} (Excel行號:A${i+1}, 陣列索引:${i}, 年度目標:${yearTarget}, 月目標:${row[3]})`);
+                // 檢查當前行是否有有效數據
+                const hasValidData = yearTarget > 0 || monthTarget > 0;
+                
+                if (hasValidData) {
+                    // 【修正後的店別識別：只使用行號定位目標店別】
+                    // Excel 行號對應 (從 0 開始, 標題佔 2 行):
+                    // A6=中港店(i=3), A7=中友店(i=4), A11=耐斯店(i=8), A16=垂楊店(i=13), A20=台中三井店(i=17)
+                    
+                    if (i === 3) {
+                        storeName = '中港店';
+                    } else if (i === 4) {
+                        storeName = '中友店';
+                    } else if (i === 8) {
+                        storeName = '耐斯店';
+                    } else if (i === 13) {
+                        storeName = '垂楊店';
+                    } else if (i === 17) {
+                        storeName = '台中三井店'; 
                     }
                 }
                 
+                // 只有當 storeName 被成功定義為目標店別時，才進行數據存儲
                 if (storeName) {
+                    
                     data[storeName] = {
                         yearTarget: yearTarget,
                         monthTarget: row[3],
@@ -479,10 +505,10 @@
                 reportDateBadge.textContent = dates.reportDate;
             }
             if (dates.monthRange) {
-                monthTitle.textContent = `📅 月份數據(${dates.monthRange})`;
+                monthTitle.textContent = `📅 月份數據（${dates.monthRange}）`;
             }
             if (dates.yearRange) {
-                yearTitle.textContent = `📈 年度數據(${dates.yearRange})`;
+                yearTitle.textContent = `📈 年度數據（${dates.yearRange}）`;
             }
             
             monthlyBody.innerHTML = '';
@@ -494,7 +520,7 @@
                 if (data[storeName]) {
                     const d = data[storeName];
                     
-                    // 月份數據
+                    // 月份數據 (根據新的表頭順序調整)
                     const monthRow = `
                         <tr>
                             <td class="store-name">${storeName}</td>
@@ -512,7 +538,7 @@
                     `;
                     monthlyBody.innerHTML += monthRow;
 
-                    // 年度數據
+                    // 年度數據 (根據新的表頭順序調整)
                     const yearRow = `
                         <tr>
                             <td class="store-name">${storeName}</td>
@@ -537,29 +563,35 @@
         }
 
         function formatNumber(num) {
-            if (num === undefined || num === null) return '0';
+            if (num === undefined || num === null || isNaN(num)) return '0';
+            // 將數字四捨五入到整數並加入千位分隔符
             return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         }
 
         function exportToExcel() {
             let csv = '\ufeff店鋪銷售數據報表\n\n';
+            
+            // 匯出月份數據
             csv += '月份數據\n';
-            csv += '店名,目標,預估業績,實績,預估達成率,預估差距,去年同期,成長比,成長金額,月計達成率,目標差距\n';
+            // 新的 CSV 標頭，匹配新的表格結構
+            csv += '店名,目標,預估業績,實績,達成率,差距,去年同期,成長比,成長金額,達成率,目標差距\n';
             
             const monthlyRows = document.querySelectorAll('#monthlyBody tr');
             monthlyRows.forEach(row => {
                 const cells = row.querySelectorAll('td');
-                const rowData = Array.from(cells).map(cell => cell.textContent.trim());
+                const rowData = Array.from(cells).map(cell => cell.textContent.trim().replace(/,/g, '').replace(/%/g, '')); // 移除逗號和百分號
                 csv += rowData.join(',') + '\n';
             });
 
+            // 匯出年度數據
             csv += '\n年度數據\n';
-            csv += '店名,年度目標,預估業績,實績,預估達成率,預估差距,同期實績,成長比,成長金額,月計達成率,目標差距\n';
+            // 新的 CSV 標頭，匹配新的表格結構
+            csv += '店名,年度目標,預估業績,實績,達成率,差距,同期實績,成長比,成長金額,達成率,目標差距\n';
             
             const yearlyRows = document.querySelectorAll('#yearlyBody tr');
             yearlyRows.forEach(row => {
                 const cells = row.querySelectorAll('td');
-                const rowData = Array.from(cells).map(cell => cell.textContent.trim());
+                const rowData = Array.from(cells).map(cell => cell.textContent.trim().replace(/,/g, '').replace(/%/g, '')); // 移除逗號和百分號
                 csv += rowData.join(',') + '\n';
             });
 
