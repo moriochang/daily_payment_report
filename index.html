@@ -17,7 +17,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
-            color: #333;
+            color: #333; /* 預設文字顏色 */
         }
 
         .container {
@@ -164,46 +164,33 @@
         td {
             padding: 15px 12px;
             text-align: center;
+            /* 調整表格線顏色，使其更明顯 */
             border: 1px solid #ddd; 
             font-size: 0.95em;
-            color: #333;
+            color: #333; /* 確保內容是黑色文字 */
         }
         
-        /* 斑馬紋效果 */
-        tbody tr:nth-child(odd):not(.total-row) {
-            background-color: #f5f5f5; 
+        /* 實現淺灰色底的斑馬紋效果，方便識別 */
+        tbody tr:nth-child(odd) {
+            background-color: #f5f5f5; /* 淺灰色底 */
         }
         
-        tbody tr:nth-child(even):not(.total-row) {
-            background-color: white; 
+        tbody tr:nth-child(even) {
+            background-color: white; /* 白色底 */
         }
 
-        tbody tr:not(.total-row) {
+        tbody tr {
             transition: all 0.3s ease;
         }
 
-        tbody tr:not(.total-row):hover {
+        tbody tr:hover {
             background: #eef1ff;
             transform: scale(1.01);
         }
 
-        /* 總計行樣式 */
-        .total-row td {
-            background: #e0e7ff; /* 淺藍色背景 */
-            font-weight: 700;
-            border-top: 3px double #667eea;
-            font-size: 1em;
-        }
-        
-        .total-row td:first-child {
-            text-align: center;
-            padding-left: 0;
-        }
-
-        /* 店名欄位樣式 */
         .store-name {
             font-weight: 700;
-            color: #333; /* 簡化店名顏色為黑色 */
+            color: #333; /* 保持店名為黑色 */
             text-align: left;
             padding-left: 20px;
         }
@@ -217,8 +204,7 @@
             color: #ef4444;
             font-weight: 600;
         }
-        
-        /* 其他不變的樣式... */
+
         .export-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -362,14 +348,19 @@
         const fileInput = document.getElementById('fileInput');
         const resultsSection = document.getElementById('resultsSection');
 
+        // 點擊上傳
         uploadArea.addEventListener('click', () => fileInput.click());
+
+        // 拖曳功能
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadArea.classList.add('dragover');
         });
+
         uploadArea.addEventListener('dragleave', () => {
             uploadArea.classList.remove('dragover');
         });
+
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
             uploadArea.classList.remove('dragover');
@@ -378,6 +369,8 @@
                 handleFile(files[0]);
             }
         });
+
+        // 文件選擇
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 handleFile(e.target.files[0]);
@@ -441,7 +434,6 @@
             
             for (let i = 2; i < jsonData.length; i++) {
                 const row = jsonData[i];
-                // 檢查行數據完整性
                 if (!row || row.length < 30) continue;
                 
                 const yearTarget = row[2];
@@ -468,87 +460,38 @@
                 }
                 
                 if (storeName) {
-                    // 將所有數字型態的數據儲存為數值，方便後續計算
+                    
                     data[storeName] = {
-                        yearTarget: Number(yearTarget || 0),
-                        monthTarget: Number(row[3] || 0),
-                        monthActual: Number(row[10] || 0),
-                        monthEstimate: Number(row[11] || 0),
-                        monthEstimateRate: (Number(row[12] || 0) * 100).toFixed(2),
-                        monthEstimateDiff: Number(row[13] || 0),
-                        lastYearMonth: Number(row[15] || 0),
-                        monthGrowthRate: Number(row[16] || 0),
-                        monthGrowthAmount: Number(row[17] || 0),
-                        monthTargetRate: (Number(row[26] || 0) * 100).toFixed(2),
-                        monthTargetDiff: Number(row[27] || 0),
-                        
-                        yearActual: Number(row[18] || 0),
-                        yearEstimate: Number(row[19] || 0),
-                        yearEstimateRate: (Number(row[20] || 0) * 100).toFixed(2),
-                        yearEstimateDiff: Number(row[21] || 0),
-                        lastYearSamePeriod: Number(row[23] || 0),
-                        yearGrowthRate: Number(row[24] || 0),
-                        yearGrowthAmount: Number(row[25] || 0),
-                        yearTargetRate: (Number(row[28] || 0) * 100).toFixed(2),
-                        yearTargetDiff: Number(row[29] || 0)
+                        yearTarget: yearTarget,
+                        monthTarget: row[3],
+                        monthActual: row[10],
+                        monthEstimate: row[11],
+                        monthEstimateRate: (row[12] * 100).toFixed(2),
+                        monthEstimateDiff: row[13],
+                        lastYearMonth: row[15],
+                        monthGrowthRate: (row[16] * 100).toFixed(2),
+                        monthGrowthAmount: row[17],
+                        monthTargetRate: (row[26] * 100).toFixed(2),
+                        monthTargetDiff: row[27],
+                        yearActual: row[18],
+                        yearEstimate: row[19],
+                        yearEstimateRate: (row[20] * 100).toFixed(2),
+                        yearEstimateDiff: row[21],
+                        lastYearSamePeriod: row[23],
+                        yearGrowthRate: (row[24] * 100).toFixed(2),
+                        yearGrowthAmount: row[25],
+                        yearTargetRate: (row[28] * 100).toFixed(2),
+                        yearTargetDiff: row[29]
                     };
                 }
             }
             
             return { data, dates };
         }
-        
-        // 輔助函數：計算總計
-        function calculateTotals(data) {
-            const totals = {
-                monthTarget: 0, monthEstimate: 0, monthActual: 0, monthEstimateDiff: 0, lastYearMonth: 0, monthGrowthAmount: 0, monthTargetDiff: 0,
-                yearTarget: 0, yearEstimate: 0, yearActual: 0, yearEstimateDiff: 0, lastYearSamePeriod: 0, yearGrowthAmount: 0, yearTargetDiff: 0
-            };
-
-            const storeData = Object.values(data);
-            
-            storeData.forEach(d => {
-                // 月份總計
-                totals.monthTarget += d.monthTarget;
-                totals.monthEstimate += d.monthEstimate;
-                totals.monthActual += d.monthActual;
-                totals.monthEstimateDiff += d.monthEstimateDiff;
-                totals.lastYearMonth += d.lastYearMonth;
-                totals.monthGrowthAmount += d.monthGrowthAmount;
-                totals.monthTargetDiff += d.monthTargetDiff;
-
-                // 年度總計
-                totals.yearTarget += d.yearTarget;
-                totals.yearEstimate += d.yearEstimate;
-                totals.yearActual += d.yearActual;
-                totals.yearEstimateDiff += d.yearEstimateDiff;
-                totals.lastYearSamePeriod += d.lastYearSamePeriod;
-                totals.yearGrowthAmount += d.yearGrowthAmount;
-                totals.yearTargetDiff += d.yearTargetDiff;
-            });
-            
-            // 計算彙總後的達成率和成長比 (總和 / 總和)
-            // 月份
-            totals.monthEstimateRate = totals.monthTarget > 0 ? ((totals.monthEstimate / totals.monthTarget) * 100).toFixed(2) : (0).toFixed(2);
-            totals.monthTargetRate = totals.monthTarget > 0 ? ((totals.monthActual / totals.monthTarget) * 100).toFixed(2) : (0).toFixed(2);
-            totals.monthGrowthRate = totals.lastYearMonth > 0 ? ((totals.monthActual / totals.lastYearMonth - 1) * 100).toFixed(2) : (0).toFixed(2);
-
-            // 年度
-            totals.yearEstimateRate = totals.yearTarget > 0 ? ((totals.yearEstimate / totals.yearTarget) * 100).toFixed(2) : (0).toFixed(2);
-            totals.yearTargetRate = totals.yearTarget > 0 ? ((totals.yearActual / totals.yearTarget) * 100).toFixed(2) : (0).toFixed(2);
-            totals.yearGrowthRate = totals.lastYearSamePeriod > 0 ? ((totals.yearActual / totals.lastYearSamePeriod - 1) * 100).toFixed(2) : (0).toFixed(2);
-
-
-            return totals;
-        }
-
 
         function displayResults(data, dates) {
             const monthlyBody = document.getElementById('monthlyBody');
             const yearlyBody = document.getElementById('yearlyBody');
-            const totals = calculateTotals(data); // 計算總計數據
-            
-            // ... (日期更新程式碼省略，同上) ...
             const reportDateBadge = document.getElementById('reportDate');
             const monthTitle = document.getElementById('monthTitle');
             const yearTitle = document.getElementById('yearTitle');
@@ -572,7 +515,7 @@
                 if (data[storeName]) {
                     const d = data[storeName];
                     
-                    // 月份數據
+                    // 月份數據 (順序已匹配新的表頭)
                     const monthRow = `
                         <tr>
                             <td class="store-name">${storeName}</td>
@@ -590,7 +533,7 @@
                     `;
                     monthlyBody.innerHTML += monthRow;
 
-                    // 年度數據
+                    // 年度數據 (順序已匹配新的表頭)
                     const yearRow = `
                         <tr>
                             <td class="store-name">${storeName}</td>
@@ -600,7 +543,7 @@
                             <td>${d.yearEstimateRate}%</td>
                             <td class="${d.yearEstimateDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(d.yearEstimateDiff)}</td>
                             <td>${formatNumber(d.lastYearSamePeriod)}</td>
-                            <td class="${parseFloat(d.yearGrowthRate) >= 0 ? 'positive' : 'negative'}">${d.yearGrowthRate.toFixed(2)}%</td>
+                            <td class="${parseFloat(d.yearGrowthRate) >= 0 ? 'positive' : 'negative'}">${d.yearGrowthRate}%</td>
                             <td class="${d.yearGrowthAmount >= 0 ? 'positive' : 'negative'}">${formatNumber(d.yearGrowthAmount)}</td>
                             <td>${d.yearTargetRate}%</td>
                             <td class="${d.yearTargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(d.yearTargetDiff)}</td>
@@ -609,46 +552,6 @@
                     yearlyBody.innerHTML += yearRow;
                 }
             });
-            
-            // -----------------------------------------------------------------
-            // 新增總計行 (月份)
-            // -----------------------------------------------------------------
-            const monthTotalRow = `
-                <tr class="total-row">
-                    <td>總計</td>
-                    <td>${formatNumber(totals.monthTarget)}</td>
-                    <td>${formatNumber(totals.monthEstimate)}</td>
-                    <td>${formatNumber(totals.monthActual)}</td>
-                    <td>${totals.monthEstimateRate}%</td>
-                    <td class="${totals.monthEstimateDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(totals.monthEstimateDiff)}</td>
-                    <td>${formatNumber(totals.lastYearMonth)}</td>
-                    <td class="${parseFloat(totals.monthGrowthRate) >= 0 ? 'positive' : 'negative'}">${totals.monthGrowthRate}%</td>
-                    <td class="${totals.monthGrowthAmount >= 0 ? 'positive' : 'negative'}">${formatNumber(totals.monthGrowthAmount)}</td>
-                    <td>${totals.monthTargetRate}%</td>
-                    <td class="${totals.monthTargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(totals.monthTargetDiff)}</td>
-                </tr>
-            `;
-            monthlyBody.innerHTML += monthTotalRow;
-
-            // -----------------------------------------------------------------
-            // 新增總計行 (年度)
-            // -----------------------------------------------------------------
-            const yearTotalRow = `
-                <tr class="total-row">
-                    <td>總計</td>
-                    <td>${formatNumber(totals.yearTarget)}</td>
-                    <td>${formatNumber(totals.yearEstimate)}</td>
-                    <td>${formatNumber(totals.yearActual)}</td>
-                    <td>${totals.yearEstimateRate}%</td>
-                    <td class="${totals.yearEstimateDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(totals.yearEstimateDiff)}</td>
-                    <td>${formatNumber(totals.lastYearSamePeriod)}</td>
-                    <td class="${parseFloat(totals.yearGrowthRate) >= 0 ? 'positive' : 'negative'}">${totals.yearGrowthRate}%</td>
-                    <td class="${totals.yearGrowthAmount >= 0 ? 'positive' : 'negative'}">${formatNumber(totals.yearGrowthAmount)}</td>
-                    <td>${totals.yearTargetRate}%</td>
-                    <td class="${totals.yearTargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(totals.yearTargetDiff)}</td>
-                </tr>
-            `;
-            yearlyBody.innerHTML += yearTotalRow;
 
             resultsSection.style.display = 'block';
             resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -656,7 +559,6 @@
 
         function formatNumber(num) {
             if (num === undefined || num === null || isNaN(num)) return '0';
-            // Math.round(num) 確保是整數
             return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         }
 
@@ -665,17 +567,20 @@
             
             // 匯出月份數據
             csv += '月份數據\n';
+            // CSV 標頭，匹配新的表格結構
             csv += '店名,目標,預估業績,實績,達成率,差距,去年同期,成長比,成長金額,達成率,目標差距\n';
             
             const monthlyRows = document.querySelectorAll('#monthlyBody tr');
             monthlyRows.forEach(row => {
                 const cells = row.querySelectorAll('td');
+                // 移除逗號和百分號，確保數據可計算
                 const rowData = Array.from(cells).map(cell => cell.textContent.trim().replace(/,/g, '').replace(/%/g, '')); 
                 csv += rowData.join(',') + '\n';
             });
 
             // 匯出年度數據
             csv += '\n年度數據\n';
+            // CSV 標頭，匹配新的表格結構
             csv += '店名,年度目標,預估業績,實績,達成率,差距,同期實績,成長比,成長金額,達成率,目標差距\n';
             
             const yearlyRows = document.querySelectorAll('#yearlyBody tr');
