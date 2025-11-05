@@ -112,14 +112,14 @@
             gap: 10px;
         }
 
-        /* 日期徽章與表頭同步 */
+        /* 【修正點 2】日期徽章配色同步：深藍色背景，白色字體 */
         .date-badge {
-            background: #D9E2EC;
-            color: #495057;
+            background: #004d99; /* 深藍色 */
+            color: white; /* 白色字體 */
             padding: 8px 20px;
             border-radius: 25px;
-            font-size: 0.6em;
-            font-weight: normal;
+            font-size: 0.9em; /* 增大字體以配合整體風格 */
+            font-weight: bold;
             margin-left: auto;
         }
 
@@ -138,24 +138,28 @@
             min-width: 1200px;
         }
 
-        /* 【修正點 2.1】表頭統一使用深藍色白字體 */
+        /* 表頭配色：深藍色白字體 */
         thead {
-            background: #004d99; /* 深藍色 */
+            background: #004d99;
             color: white;
         }
         
         /* 確保第二層標題顏色略深一點以示區分 */
         thead tr:nth-child(2) {
-            background: #0066cc; /* 略深藍色 */
+            background: #0066cc;
         }
 
         th {
             padding: 18px 12px;
             text-align: center;
             font-weight: 600;
-            font-size: 0.9em;
-            border-right: 1px solid rgba(255,255,255,0.3); /* 白色分隔線 */
+            border-right: 1px solid rgba(255,255,255,0.3);
             white-space: nowrap;
+        }
+        
+        /* 【修正點 1】增大第一層標題字體 */
+        thead tr:nth-child(1) th {
+            font-size: 1.1em; /* 增大字體 */
         }
 
         th:last-child {
@@ -165,7 +169,7 @@
         thead tr:nth-child(2) th {
             padding: 10px 12px;
             font-weight: 400;
-            font-size: 0.85em;
+            font-size: 0.9em; /* 保持第二層字體相對小 */
         }
 
         td {
@@ -419,7 +423,6 @@
         }
         
         function safeParseFloat(value) {
-            // 由於 CSV 數據可能將數字存儲為字串，這裡確保轉為數字進行計算
             return parseFloat(value) || 0;
         }
 
@@ -480,7 +483,6 @@
                 
                 if (storeName) {
                     
-                    // 提取所有需要的原始數字
                     const M_Actual = safeParseFloat(row[10]);
                     const M_Estimate = safeParseFloat(row[11]);
                     const Y_Actual = safeParseFloat(row[18]);
@@ -493,26 +495,26 @@
                         monthActual: M_Actual,
                         monthEstimate: M_Estimate,
                         monthEstimateRate: (safeParseFloat(row[12]) * 100).toFixed(2),
-                        // 【修正點 1.1】重新計算：實績 - 預估業績
+                        // 月份差距：實績 - 預估業績
                         monthEstimateDiff: M_Actual - M_Estimate, 
                         
                         lastYearMonth: safeParseFloat(row[15]),
                         monthGrowthRate: (safeParseFloat(row[16]) * 100).toFixed(2),
                         monthGrowthAmount: safeParseFloat(row[17]),
                         monthTargetRate: (safeParseFloat(row[26]) * 100).toFixed(2),
-                        monthTargetDiff: safeParseFloat(row[27]), // 這邊用原始數據，因為這是目標差異，不是預估差異
+                        monthTargetDiff: safeParseFloat(row[27]),
                         
                         yearActual: Y_Actual,
                         yearEstimate: Y_Estimate,
                         yearEstimateRate: (safeParseFloat(row[20]) * 100).toFixed(2),
-                        // 【修正點 1.2】重新計算：實績 - 預估業績
+                        // 年度差距：實績 - 預估業績
                         yearEstimateDiff: Y_Actual - Y_Estimate, 
                         
                         lastYearSamePeriod: safeParseFloat(row[23]),
                         yearGrowthRate: (safeParseFloat(row[24]) * 100).toFixed(2),
                         yearGrowthAmount: safeParseFloat(row[25]),
                         yearTargetRate: (safeParseFloat(row[28]) * 100).toFixed(2),
-                        yearTargetDiff: safeParseFloat(row[29]) // 這邊用原始數據
+                        yearTargetDiff: safeParseFloat(row[29])
                     };
                 }
             }
@@ -601,7 +603,6 @@
             
             // 計算和渲染總計行 (月份)
             const M_EstimateRate = totals.monthEstimate > 0 ? (totals.monthActual / totals.monthEstimate) * 100 : 0;
-            // 【修正點 1.5】總計差異計算：實績 - 預估業績
             const M_EstimateDiff = totals.monthActual - totals.monthEstimate; 
             const M_GrowthRate = totals.lastYearMonth > 0 ? (totals.monthActual / totals.lastYearMonth - 1) * 100 : 0;
             const M_GrowthAmount = totals.monthActual - totals.lastYearMonth;
@@ -627,7 +628,6 @@
 
             // 計算和渲染總計行 (年度)
             const Y_EstimateRate = totals.yearEstimate > 0 ? (totals.yearActual / totals.yearEstimate) * 100 : 0;
-            // 【修正點 1.6】總計差異計算：實績 - 預估業績
             const Y_EstimateDiff = totals.yearActual - totals.yearEstimate; 
             const Y_GrowthRate = totals.lastYearSamePeriod > 0 ? (totals.yearActual / totals.lastYearSamePeriod - 1) * 100 : 0;
             const Y_GrowthAmount = totals.yearActual - totals.lastYearSamePeriod;
@@ -671,7 +671,6 @@
             const monthlyRows = document.querySelectorAll('#monthlyBody tr');
             monthlyRows.forEach(row => {
                 const cells = row.querySelectorAll('td');
-                // 移除格式符號，確保 CSV 數據為純淨數字
                 const rowData = Array.from(cells).map(cell => cell.textContent.trim().replace(/,/g, '').replace(/%/g, '')); 
                 csv += rowData.join(',') + '\n';
             });
