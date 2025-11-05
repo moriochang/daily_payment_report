@@ -158,6 +158,19 @@
             border-bottom: 1px solid #e5e7eb;
             font-size: 0.95em;
         }
+        
+        /* 總計行樣式 */
+        .total-row {
+            font-weight: 700;
+            background: #f1f5ff; /* 淺藍色背景 */
+            border-top: 3px double #667eea;
+        }
+        
+        .total-row:hover {
+            background: #f1f5ff !important;
+            transform: none !important;
+        }
+
 
         tbody tr {
             transition: all 0.3s ease;
@@ -178,6 +191,11 @@
             text-align: left;
             padding-left: 20px;
         }
+        
+        .total-row .store-name {
+            color: #333;
+        }
+
 
         .positive {
             color: #10b981;
@@ -265,7 +283,7 @@
                     <thead>
                         <tr>
                             <th>店名</th>
-                            <th>目標<br><small>(月預估)</small></th>
+                            <th>月目標</th>
                             <th>預估業績<br><small>(月別)</small></th>
                             <th>實績<br><small>(月別)</small></th>
                             <th>預估達成率<br><small>(月別)</small></th>
@@ -439,13 +457,14 @@
                 }
                 
                 if (storeName) {
+                    // **注意: 月份預估差距已修改為: 實績(row[10]) - 預估業績(row[11])**
                     data[storeName] = {
-                        yearTarget: yearTarget,
+                        yearTarget: row[2],
                         monthTarget: row[3],
                         monthActual: row[10],
                         monthEstimate: row[11],
                         monthEstimateRate: (row[12] * 100).toFixed(2),
-                        monthEstimateDiff: row[13],
+                        monthEstimateDiff: row[10] - row[11], // 實績 - 預估業績 (使用者要求修改)
                         lastYearMonth: row[15],
                         monthGrowthRate: (row[16] * 100).toFixed(2),
                         monthGrowthAmount: row[17],
@@ -489,10 +508,12 @@
             yearlyBody.innerHTML = '';
 
             const storeOrder = ['中港店', '中友店', '台中三井店', '耐斯店', '垂楊店'];
+            const activeStoresData = [];
 
             storeOrder.forEach(storeName => {
                 if (data[storeName]) {
                     const d = data[storeName];
+                    activeStoresData.push(d); // 收集有效的店鋪數據
                     
                     // 月份數據
                     const monthRow = `
@@ -532,8 +553,130 @@
                 }
             });
 
+            // 計算並新增總計列
+            if (activeStoresData.length > 0) {
+                const totals = calculateTotals(activeStoresData);
+                monthlyBody.innerHTML += createTotalRow(totals.month, 'month');
+                yearlyBody.innerHTML += createTotalRow(totals.year, 'year');
+            }
+
+
             resultsSection.style.display = 'block';
             resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function calculateTotals(activeStoresData) {
+            const totals = {
+                month: {
+                    monthTarget: 0,
+                    monthEstimate: 0,
+                    monthActual: 0,
+                    monthEstimateDiff: 0,
+                    lastYearMonth: 0,
+                    monthGrowthAmount: 0,
+                    monthTargetDiff: 0,
+                    monthEstimateRate: 0, // 需計算
+                    monthGrowthRate: 0, // 需計算
+                    monthTargetRate: 0 // 需計算
+                },
+                year: {
+                    yearTarget: 0,
+                    yearEstimate: 0,
+                    yearActual: 0,
+                    yearEstimateDiff: 0,
+                    lastYearSamePeriod: 0,
+                    yearGrowthAmount: 0,
+                    yearTargetDiff: 0,
+                    yearEstimateRate: 0, // 需計算
+                    yearGrowthRate: 0, // 需計算
+                    yearTargetRate: 0 // 需計算
+                }
+            };
+
+            // 累加數值
+            activeStoresData.forEach(d => {
+                totals.month.monthTarget += parseFloat(d.monthTarget) || 0;
+                totals.month.monthEstimate += parseFloat(d.monthEstimate) || 0;
+                totals.month.monthActual += parseFloat(d.monthActual) || 0;
+                totals.month.monthEstimateDiff += parseFloat(d.monthEstimateDiff) || 0;
+                totals.month.lastYearMonth += parseFloat(d.lastYearMonth) || 0;
+                totals.month.monthGrowthAmount += parseFloat(d.monthGrowthAmount) || 0;
+                totals.month.monthTargetDiff += parseFloat(d.monthTargetDiff) || 0;
+                
+                totals.year.yearTarget += parseFloat(d.yearTarget) || 0;
+                totals.year.yearEstimate += parseFloat(d.yearEstimate) || 0;
+                totals.year.yearActual += parseFloat(d.yearActual) || 0;
+                totals.year.yearEstimateDiff += parseFloat(d.yearEstimateDiff) || 0;
+                totals.year.lastYearSamePeriod += parseFloat(d.lastYearSamePeriod) || 0;
+                totals.year.yearGrowthAmount += parseFloat(d.yearGrowthAmount) || 0;
+                totals.year.yearTargetDiff += parseFloat(d.yearTargetDiff) || 0;
+            });
+            
+            // 計算比例
+            // 月份預估達成率: 月別實績 / 月別預估業績
+            if (totals.month.monthEstimate !== 0) {
+                totals.month.monthEstimateRate = (totals.month.monthActual / totals.month.monthEstimate * 100).toFixed(2);
+            }
+            // 月份成長比: 成長金額 / 去年同期
+            if (totals.month.lastYearMonth !== 0) {
+                totals.month.monthGrowthRate = (totals.month.monthGrowthAmount / totals.month.lastYearMonth * 100).toFixed(2);
+            }
+            // 月份目標達成率: 月別實績 / 月目標
+            if (totals.month.monthTarget !== 0) {
+                totals.month.monthTargetRate = (totals.month.monthActual / totals.month.monthTarget * 100).toFixed(2);
+            }
+
+            // 年度預估達成率: 年計實績 / 年計預估業績
+            if (totals.year.yearEstimate !== 0) {
+                totals.year.yearEstimateRate = (totals.year.yearActual / totals.year.yearEstimate * 100).toFixed(2);
+            }
+            // 年度成長比: 成長金額 / 同期實績(去年)
+            if (totals.year.lastYearSamePeriod !== 0) {
+                totals.year.yearGrowthRate = (totals.year.yearGrowthAmount / totals.year.lastYearSamePeriod * 100).toFixed(2);
+            }
+            // 年度目標達成率: 年計實績 / 年度目標
+            if (totals.year.yearTarget !== 0) {
+                totals.year.yearTargetRate = (totals.year.yearActual / totals.year.yearTarget * 100).toFixed(2);
+            }
+            
+            return totals;
+        }
+        
+        function createTotalRow(data, type) {
+            if (type === 'month') {
+                return `
+                    <tr class="total-row">
+                        <td class="store-name">總計</td>
+                        <td>${formatNumber(data.monthTarget)}</td>
+                        <td>${formatNumber(data.monthEstimate)}</td>
+                        <td>${formatNumber(data.monthActual)}</td>
+                        <td>${data.monthEstimateRate}%</td>
+                        <td class="${data.monthEstimateDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(data.monthEstimateDiff)}</td>
+                        <td>${formatNumber(data.lastYearMonth)}</td>
+                        <td class="${parseFloat(data.monthGrowthRate) >= 0 ? 'positive' : 'negative'}">${data.monthGrowthRate}%</td>
+                        <td class="${data.monthGrowthAmount >= 0 ? 'positive' : 'negative'}">${formatNumber(data.monthGrowthAmount)}</td>
+                        <td>${data.monthTargetRate}%</td>
+                        <td class="${data.monthTargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(data.monthTargetDiff)}</td>
+                    </tr>
+                `;
+            } else if (type === 'year') {
+                 return `
+                    <tr class="total-row">
+                        <td class="store-name">總計</td>
+                        <td>${formatNumber(data.yearTarget)}</td>
+                        <td>${formatNumber(data.yearEstimate)}</td>
+                        <td>${formatNumber(data.yearActual)}</td>
+                        <td>${data.yearEstimateRate}%</td>
+                        <td class="${data.yearEstimateDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(data.yearEstimateDiff)}</td>
+                        <td>${formatNumber(data.lastYearSamePeriod)}</td>
+                        <td class="${parseFloat(data.yearGrowthRate) >= 0 ? 'positive' : 'negative'}">${data.yearGrowthRate}%</td>
+                        <td class="${data.yearGrowthAmount >= 0 ? 'positive' : 'negative'}">${formatNumber(data.yearGrowthAmount)}</td>
+                        <td>${data.yearTargetRate}%</td>
+                        <td class="${data.yearTargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(data.yearTargetDiff)}</td>
+                    </tr>
+                `;
+            }
+            return '';
         }
 
         function formatNumber(num) {
@@ -544,7 +687,8 @@
         function exportToExcel() {
             let csv = '\ufeff店鋪銷售數據報表\n\n';
             csv += '月份數據\n';
-            csv += '店名,目標,預估業績,實績,預估達成率,預估差距,去年同期,成長比,成長金額,月計達成率,目標差距\n';
+            // 標題更新: 目標改為月目標
+            csv += '店名,月目標,預估業績,實績,預估達成率,預估差距,去年同期,成長比,成長金額,月計達成率,目標差距\n';
             
             const monthlyRows = document.querySelectorAll('#monthlyBody tr');
             monthlyRows.forEach(row => {
