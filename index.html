@@ -126,13 +126,15 @@
             margin-bottom: 40px;
         }
 
+        /* --- 表格邊框實線優化 --- */
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: collapse; /* 確保邊框合併成單一線條 */
             background: white;
             box-shadow: 0 2px 15px rgba(0,0,0,0.1);
             border-radius: 10px;
             overflow: hidden;
+            border: 1px solid #c0c0c0; /* 為整個表格添加一個外邊框 */
         }
 
         thead {
@@ -145,19 +147,16 @@
             text-align: center;
             font-weight: 600;
             font-size: 0.9em;
-            border-right: 1px solid rgba(255,255,255,0.2);
-        }
-
-        th:last-child {
-            border-right: none;
+            border: 1px solid rgba(255,255,255,0.3); /* 表頭單元格實線 */
         }
 
         td {
             padding: 15px 12px;
             text-align: center;
-            border-bottom: 1px solid #e5e7eb;
+            border: 1px solid #ddd; /* 內容單元格實線 */
             font-size: 0.95em;
         }
+        /* --- 優化結束 --- */
         
         /* 總計行樣式 */
         .total-row {
@@ -179,10 +178,6 @@
         tbody tr:hover {
             background: #f8f9ff;
             transform: scale(1.01);
-        }
-
-        tbody tr:last-child td {
-            border-bottom: none;
         }
 
         .store-name {
