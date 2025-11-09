@@ -14,7 +14,7 @@
 
         body {
             font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #273a67;
             min-height: 100vh;
             padding: 20px;
         }
@@ -50,7 +50,7 @@
         }
 
         .upload-area {
-            border: 3px dashed #667eea;
+            border: 3px dashed #4b69bd;
             border-radius: 15px;
             padding: 40px 20px;
             text-align: center;
@@ -61,8 +61,7 @@
 
         .upload-area:hover {
             background: #eef1ff;
-            border-color: #764ba2;
-            transform: scale(1.02);
+            border-color: #4b69bd;
         }
 
         .upload-area.dragover {
@@ -73,7 +72,7 @@
         .upload-icon {
             font-size: 3em;
             margin-bottom: 15px;
-            color: #667eea;
+            color: #4b69bd;
         }
 
         .upload-text {
@@ -105,14 +104,14 @@
             color: #333;
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 3px solid #667eea;
+            border-bottom: 3px solid #4b69bd;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
         .date-badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #4b69bd;
             color: white;
             padding: 8px 20px;
             border-radius: 25px;
@@ -138,15 +137,15 @@
         }
 
         thead {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #4b69bd;
             color: white;
         }
 
         th {
             padding: 18px 12px;
             text-align: center;
-            font-weight: 600;
-            font-size: 0.9em;
+            font-weight: 700;
+            font-size: calc(0.9em + 2px);
             border: 1px solid rgba(255,255,255,0.3); /* 表頭單元格實線 */
         }
 
@@ -162,7 +161,7 @@
         .total-row {
             font-weight: 700;
             background: #f1f5ff; /* 淺藍色背景 */
-            border-top: 3px double #667eea;
+            border-top: 3px double #4b69bd;
         }
         
         .total-row:hover {
@@ -177,12 +176,11 @@
 
         tbody tr:hover {
             background: #f8f9ff;
-            transform: scale(1.01);
         }
 
         .store-name {
             font-weight: 700;
-            color: #667eea;
+            color: #4b69bd;
             text-align: left;
             padding-left: 20px;
         }
@@ -203,7 +201,7 @@
         }
 
         .export-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #4b69bd;
             color: white;
             padding: 15px 40px;
             border: none;
@@ -212,14 +210,14 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 15px rgba(75, 105, 189, 0.4);
             margin: 20px auto;
             display: block;
         }
 
         .export-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            box-shadow: 0 6px 20px rgba(75, 105, 189, 0.6);
+            opacity: 0.9;
         }
 
         .note {
