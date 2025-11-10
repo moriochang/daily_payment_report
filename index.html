@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日預估達成報表轉換工具</title>
+    <title>日預估達成報表轉換 - 儀表版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * {
@@ -12,46 +12,139 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --bg-primary: #f5f5f5;
+            --bg-card: #ffffff;
+            --color-primary: #4b69bd;
+            --color-success: #10b981;
+            --color-danger: #ef4444;
+            --color-warning: #f59e0b;
+            --color-text: #333333;
+            --color-text-secondary: #666666;
+            --border: #e0e0e0;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
+            --shadow-hover: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
         body {
             font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif;
-            background: #273a67;
+            background: var(--bg-primary);
             min-height: 100vh;
             padding: 20px;
+            color: var(--color-text);
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
         }
 
+        /* ===== 頂部區域 ===== */
         .header {
-            text-align: center;
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title h1 {
+            font-size: 1.8em;
+            color: var(--color-primary);
+            font-weight: 700;
+        }
+        
+        .header-date {
+            color: var(--color-text-secondary);
+            font-size: 0.95em;
+            margin-top: 4px;
+        }
+
+        .header-subtitle {
+            font-size: 1.8em;
+            color: #000000;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+        }
+
+        .today-date {
+            background: var(--bg-primary);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
             color: white;
-            margin-bottom: 20px;
         }
 
-        .header h1 {
-            font-size: 2em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .header p {
-            font-size: 1em;
+        .btn-primary:hover {
             opacity: 0.9;
+            box-shadow: var(--shadow-hover);
         }
 
+        .btn-secondary {
+            background: var(--bg-primary);
+            color: var(--color-text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #e8e8e8;
+        }
+
+        /* ===== 上傳區域 ===== */
         .upload-section {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        .upload-section.active {
+            display: block;
         }
 
         .upload-area {
-            border: 3px dashed #4b69bd;
-            border-radius: 15px;
+            border: 2px dashed var(--color-primary);
+            border-radius: 12px;
             padding: 40px 20px;
             text-align: center;
             cursor: pointer;
@@ -61,319 +154,616 @@
 
         .upload-area:hover {
             background: #eef1ff;
-            border-color: #4b69bd;
-        }
-
-        .upload-area.dragover {
-            background: #e0e7ff;
-            border-color: #4f46e5;
+            border-color: var(--color-primary);
         }
 
         .upload-icon {
             font-size: 3em;
-            margin-bottom: 15px;
-            color: #4b69bd;
+            margin-bottom: 12px;
+            color: var(--color-primary);
         }
 
         .upload-text {
             font-size: 1.1em;
-            color: #333;
-            margin-bottom: 8px;
+            color: var(--color-text);
             font-weight: 600;
+            margin-bottom: 8px;
         }
 
         .upload-hint {
-            color: #666;
-            font-size: 0.95em;
+            color: var(--color-text-secondary);
+            font-size: 0.9em;
         }
 
         #fileInput {
             display: none;
         }
 
-        .results-section {
+        /* ===== KPI 卡片區 ===== */
+        .kpi-section {
             display: none;
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 24px;
+        }
+
+        .kpi-section.active {
+            display: block;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--color-primary);
+        }
+
+        .kpi-card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .kpi-card.success {
+            border-left-color: var(--color-success);
+        }
+
+        .kpi-card.danger {
+            border-left-color: var(--color-danger);
+        }
+
+        .kpi-label {
+            font-size: 0.9em;
+            color: var(--color-text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .kpi-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        .kpi-change {
+            font-size: 0.95em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .kpi-change.positive {
+            color: var(--color-success);
+        }
+
+        .kpi-change.negative {
+            color: var(--color-danger);
+        }
+
+        /* ===== 分頁 ===== */
+        .tabs {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 8px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--color-text-secondary);
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            background: var(--bg-primary);
+        }
+
+        .tab.active {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        /* ===== 店鋪卡片網格 ===== */
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .store-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .store-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--color-primary);
+            position: relative;
+        }
+
+        .store-card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .store-card.success {
+            border-left-color: var(--color-success);
+        }
+
+        .store-card.danger {
+            border-left-color: var(--color-danger);
+        }
+
+        .store-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .store-name {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+
+        .store-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .store-badge.success {
+            background: #d1fae5;
+            color: var(--color-success);
+        }
+
+        .store-badge.danger {
+            background: #fee2e2;
+            color: var(--color-danger);
+        }
+
+        .store-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .metric {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .metric-label {
+            font-size: 0.85em;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        .metric-value.success {
+            color: var(--color-success);
+        }
+
+        .metric-value.danger {
+            color: var(--color-danger);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--color-primary);
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+
+        .progress-fill.success {
+            background: var(--color-success);
+        }
+
+        .progress-fill.danger {
+            background: var(--color-danger);
+        }
+
+        .store-comparison {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            font-size: 0.9em;
+        }
+
+        /* ===== 表格區域 ===== */
+        .table-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            overflow-x: auto;
         }
 
         .section-title {
-            font-size: 1.8em;
-            color: #333;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--color-text);
             margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 3px solid #4b69bd;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
-        .date-badge {
-            background: #4b69bd;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 25px;
-            font-size: 0.6em;
-            font-weight: normal;
-            margin-left: auto;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            margin-bottom: 40px;
-        }
-
-        /* --- 表格邊框實線優化 --- */
         table {
             width: 100%;
-            border-collapse: collapse; /* 確保邊框合併成單一線條 */
-            background: white;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-            border-radius: 10px;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
             overflow: hidden;
-            border: 1px solid #c0c0c0; /* 為整個表格添加一個外邊框 */
         }
 
         thead {
-            background: #4b69bd;
+            background: var(--color-primary);
             color: white;
         }
 
         th {
-            padding: 18px 12px;
+            padding: 16px 12px;
             text-align: center;
             font-weight: 700;
             font-size: calc(0.9em + 2px);
-            border: 1px solid rgba(255,255,255,0.3); /* 表頭單元格實線 */
+            border: 1px solid rgba(255,255,255,0.3);
         }
 
         td {
-            padding: 15px 12px;
+            padding: 14px 12px;
             text-align: center;
-            border: 1px solid #ddd; /* 內容單元格實線 */
+            border: 1px solid var(--border);
             font-size: 0.95em;
         }
-        /* --- 優化結束 --- */
-        
-        /* 總計行樣式 */
-        .total-row {
-            font-weight: 700;
-            background: #f1f5ff; /* 淺藍色背景 */
-            border-top: 3px double #4b69bd;
-        }
-        
-        .total-row:hover {
-            background: #f1f5ff !important;
-            transform: none !important;
-        }
-
 
         tbody tr {
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
         tbody tr:hover {
             background: #f8f9ff;
         }
 
-        .store-name {
+        tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        tbody tr:nth-child(even):hover {
+            background: #f8f9ff;
+        }
+
+        .table-store-name {
             font-weight: 700;
-            color: #4b69bd;
+            color: var(--color-primary);
             text-align: left;
             padding-left: 20px;
         }
-        
-        .total-row .store-name {
-            color: #333;
+
+        .total-row {
+            font-weight: 700;
+            background: #f1f5ff !important;
+            border-top: 3px double var(--color-primary);
         }
 
+        .total-row:hover {
+            background: #f1f5ff !important;
+        }
+
+        .total-row .table-store-name {
+            color: var(--color-text);
+        }
 
         .positive {
-            color: #10b981;
+            color: var(--color-success);
             font-weight: 600;
         }
 
         .negative {
-            color: #ef4444;
+            color: var(--color-danger);
             font-weight: 600;
         }
 
-        .export-btn {
-            background: #4b69bd;
-            color: white;
-            padding: 15px 40px;
-            border: none;
-            border-radius: 30px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(75, 105, 189, 0.4);
-            margin: 20px auto;
-            display: block;
-        }
-
-        .export-btn:hover {
-            box-shadow: 0 6px 20px rgba(75, 105, 189, 0.6);
-            opacity: 0.9;
-        }
-
-        .note {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 15px 20px;
-            margin-top: 30px;
-            border-radius: 5px;
-            font-size: 0.9em;
-            color: #92400e;
-        }
-
+        /* ===== 響應式 ===== */
         @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.8em;
-            }
-            
-            .upload-section, .results-section {
+            .header {
                 padding: 20px;
             }
-            
-            table {
-                font-size: 0.8em;
+
+            .header-title h1 {
+                font-size: 1.4em;
             }
-            
+
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .store-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                overflow-x: auto;
+            }
+
+            .table-section {
+                padding: 20px;
+            }
+
             th, td {
-                padding: 8px 4px;
+                padding: 10px 6px;
+                font-size: 0.85em;
             }
+        }
+
+        /* ===== 載入動畫 ===== */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>📊 日預估達成報表轉換工具</h1>
-            <p>自動提取並整理五家店鋪數據</p>
+        <!-- 頂部區域 -->
+        <div class="header fade-in">
+            <div class="header-title">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 2em;">📊</span>
+                        <h1>日預估達成報表轉換工具</h1>
+                    </div>
+                    <div class="header-subtitle">
+                        <span id="todayDate"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                    📂 上傳報表
+                </button>
+                <button class="btn btn-secondary" onclick="exportToExcel()" id="exportBtn" style="display: none;">
+                    📥 匯出Excel
+                </button>
+            </div>
         </div>
 
-        <div class="upload-section">
+        <!-- 上傳區域 -->
+        <div class="upload-section active" id="uploadSection">
             <div class="upload-area" id="uploadArea">
                 <div class="upload-icon">📈</div>
                 <div class="upload-text">拖曳Excel文件至此處</div>
-                <div class="upload-hint">或點擊選擇文件(支持 .xlsx 格式)</div>
+                <div class="upload-hint">或點擊選擇文件（支援 .xlsx 格式）</div>
             </div>
             <input type="file" id="fileInput" accept=".xlsx">
         </div>
 
-        <div class="results-section" id="resultsSection">
-            <div class="section-title">
-                <span id="monthTitle">📅 月份數據</span>
-                <span class="date-badge" id="reportDate">資料日期</span>
-            </div>
-            
-            <div class="table-container">
-                <table id="monthlyTable">
-                    <thead>
-                        <tr>
-                            <th>店名</th>
-                            <th>月目標</th>
-                            <th>預估業績<br><small>(月別)</small></th>
-                            <th>實績<br><small>(月別)</small></th>
-                            <th>預估達成率<br><small>(月別)</small></th>
-                            <th>預估差距<br><small>(月別)</small></th>
-                            <th>去年同期</th>
-                            <th>成長比</th>
-                            <th>成長金額</th>
-                            <th>月計達成率<br><small>(月別)</small></th>
-                            <th>目標差距<br><small>(月別)</small></th>
-                        </tr>
-                    </thead>
-                    <tbody id="monthlyBody">
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="section-title" style="margin-top: 50px;">
-                <span id="yearTitle">📈 年度數據</span>
-            </div>
-            
-            <div class="table-container">
-                <table id="yearlyTable">
-                    <thead>
-                        <tr>
-                            <th>店名</th>
-                            <th>年度目標</th>
-                            <th>預估業績<br><small>(年計)</small></th>
-                            <th>實績<br><small>(年計)</small></th>
-                            <th>預估達成率<br><small>(年計)</small></th>
-                            <th>預估差距<br><small>(年計)</small></th>
-                            <th>同期實績<br><small>(去年)</small></th>
-                            <th>成長比</th>
-                            <th>成長金額</th>
-                            <th>月計達成率<br><small>(年度)</small></th>
-                            <th>目標差距<br><small>(年度)</small></th>
-                        </tr>
-                    </thead>
-                    <tbody id="yearlyBody">
-                    </tbody>
-                </table>
+        <!-- KPI 指標區域 -->
+        <div class="kpi-section" id="kpiSection">
+            <!-- 年度數據 -->
+            <h3 style="color: var(--color-primary); margin-bottom: 16px; font-size: 1.1em;">📊 年度總計</h3>
+            <div class="kpi-grid" style="margin-bottom: 30px;">
+                <div class="kpi-card">
+                    <div class="kpi-label">年總目標</div>
+                    <div class="kpi-value" id="kpiYearTarget">-</div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-label">年總實績</div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="kpi-value" id="kpiYearActual">-</div>
+                        <div class="kpi-change positive" id="kpiYearChange" style="font-size: 1.2em; white-space: nowrap;">-</div>
+                    </div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-label">年達成率</div>
+                    <div class="kpi-value" id="kpiYearRate">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">年成長率</div>
+                    <div class="kpi-value" id="kpiYearGrowth">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">目標差距(年度)</div>
+                    <div class="kpi-value" id="kpiYearDiff">-</div>
+                </div>
             </div>
 
-            <button class="export-btn" onclick="exportToExcel()">💾 匯出至Excel</button>
+            <!-- 月份數據 -->
+            <h3 style="color: var(--color-primary); margin-bottom: 16px; font-size: 1.1em;">📅 月份總計</h3>
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">月總目標</div>
+                    <div class="kpi-value" id="kpiMonthTarget">-</div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-label">月總實績</div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="kpi-value" id="kpiMonthActual">-</div>
+                        <div class="kpi-change positive" id="kpiMonthChange" style="font-size: 1.2em; white-space: nowrap;">-</div>
+                    </div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-label">月達成率</div>
+                    <div class="kpi-value" id="kpiMonthRate">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">月成長率</div>
+                    <div class="kpi-value" id="kpiMonthGrowth">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">月目標差距</div>
+                    <div class="kpi-value" id="kpiMonthDiff">-</div>
+                </div>
+            </div>
 
-            <div class="note">
-                <strong>💡 提示:</strong> 數據已自動提取並整理完成。綠色數字表示正成長,紅色數字表示負成長。
+            <!-- 分頁 -->
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('cards')">📊 店鋪卡片</button>
+                <button class="tab" onclick="switchTab('monthTable')">📅 月份表格</button>
+                <button class="tab" onclick="switchTab('yearTable')">📈 年度表格</button>
+            </div>
+
+            <!-- 店鋪卡片視圖 -->
+            <div class="content-section active" id="cardsSection">
+                <div class="store-grid" id="storeGrid"></div>
+            </div>
+
+            <!-- 月份表格視圖 -->
+            <div class="content-section" id="monthTableSection">
+                <div class="table-section">
+                    <div class="section-title">
+                        <span>📅</span>
+                        <span id="monthTitle">月份數據</span>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>店名</th>
+                                <th>目標<br><small>(月預估)</small></th>
+                                <th>預估業績<br><small>(月別)</small></th>
+                                <th>實績<br><small>(月別)</small></th>
+                                <th>預估達成率<br><small>(月別)</small></th>
+                                <th>預估差距<br><small>(月別)</small></th>
+                                <th>去年同期</th>
+                                <th>成長比</th>
+                                <th>成長金額</th>
+                                <th>月計達成率<br><small>(月別)</small></th>
+                                <th>目標差距<br><small>(月別)</small></th>
+                            </tr>
+                        </thead>
+                        <tbody id="monthlyBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 年度表格視圖 -->
+            <div class="content-section" id="yearTableSection">
+                <div class="table-section">
+                    <div class="section-title">
+                        <span>📈</span>
+                        <span id="yearTitle">年度數據</span>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>店名</th>
+                                <th>年度目標</th>
+                                <th>預估業績<br><small>(年計)</small></th>
+                                <th>實績<br><small>(年計)</small></th>
+                                <th>預估達成率<br><small>(年計)</small></th>
+                                <th>預估差距<br><small>(年計)</small></th>
+                                <th>同期實績<br><small>(去年)</small></th>
+                                <th>成長比</th>
+                                <th>成長金額</th>
+                                <th>月計達成率<br><small>(年度)</small></th>
+                                <th>目標差距<br><small>(年度)</small></th>
+                            </tr>
+                        </thead>
+                        <tbody id="yearlyBody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // 店鋪年度目標映射(耐斯店除外，因為有重複)
-        const storeYearTargets = {
-            425500: '中港店',
-            280000: '中友店',
-            85000: '台中三井店',
-            120000: '垂楊店'
-        };
+        // 店鋪識別映射（使用年度目標+月目標組合）
+        let currentData = null;
+        let currentDates = null;
 
+        // 上傳功能
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
-        const resultsSection = document.getElementById('resultsSection');
 
-        // 點擊上傳
         uploadArea.addEventListener('click', () => fileInput.click());
 
-        // 拖曳功能
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            uploadArea.classList.add('dragover');
+            uploadArea.style.background = '#eef1ff';
         });
 
         uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
+            uploadArea.style.background = '#f8f9ff';
         });
 
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleFile(files[0]);
+            uploadArea.style.background = '#f8f9ff';
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
             }
         });
 
-        // 文件選擇
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 handleFile(e.target.files[0]);
             }
         });
 
+        // 處理文件
         async function handleFile(file) {
             const fileName = file.name.toLowerCase();
             
             if (!fileName.endsWith('.xlsx')) {
-                alert('請上傳 Excel 文件(.xlsx格式)!');
+                alert('請上傳 Excel 文件（.xlsx格式）！');
                 return;
             }
 
@@ -383,39 +773,38 @@
                 const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                 
-                // 解析Excel數據
                 const result = parseExcelData(jsonData);
+                currentData = result.data;
+                currentDates = result.dates;
                 
-                // 顯示結果
                 displayResults(result.data, result.dates);
+                
+                // 隱藏上傳區，顯示結果
+                document.getElementById('uploadSection').classList.remove('active');
+                document.getElementById('kpiSection').classList.add('active');
+                document.getElementById('exportBtn').style.display = 'flex';
                 
             } catch (error) {
                 console.error('Excel解析錯誤:', error);
-                alert('Excel解析失敗!請確認文件格式正確。');
+                alert('Excel解析失敗！請確認文件格式正確。');
             }
         }
 
+        // 解析Excel數據
         function parseExcelData(jsonData) {
             const data = {};
-            let dates = {
-                reportDate: '',
-                monthRange: '',
-                yearRange: ''
-            };
+            let dates = { reportDate: '', monthRange: '', yearRange: '' };
             
             // 從第一行提取日期資訊
             if (jsonData.length > 0) {
                 const firstRow = jsonData[0];
-                
                 for (let cell of firstRow) {
                     if (cell && typeof cell === 'string') {
-                        // 報表日期
                         const reportDateMatch = cell.match(/(\d{1,2}\/\d{1,2})\s*$/);
                         if (reportDateMatch && !dates.reportDate) {
                             dates.reportDate = reportDateMatch[1];
                         }
                         
-                        // 月份範圍和年度範圍
                         const monthRangeMatch = cell.match(/(\d{1,2}\/\d{1,2}~\d{1,2}\/\d{1,2})/);
                         if (monthRangeMatch) {
                             const range = monthRangeMatch[1];
@@ -429,35 +818,47 @@
                 }
             }
             
-            // 從第3行開始解析數據(前2行是標題)
+            // 從第3行開始解析數據
             for (let i = 2; i < jsonData.length; i++) {
                 const row = jsonData[i];
                 if (!row || row.length < 30) continue;
                 
                 const yearTarget = row[2];
+                const monthTarget = row[3];
                 let storeName = null;
                 
-                // 優先用行號識別耐斯店 (A11 = jsonData[10])
-                if (i === 10) {
+                // 使用固定行號識別店鋪（根據實際報表位置）
+                if (i === 5) {
+                    // Excel第6行 = jsonData[5] = TC[i]store
+                    storeName = '中港店';
+                    console.log(`✓ 識別到 ${storeName}（固定行號 jsonData[${i}]，年度：${yearTarget}，月：${monthTarget}）`);
+                } else if (i === 6) {
+                    // Excel第7行 = jsonData[6] = 中soi]store
+                    storeName = '中友店';
+                    console.log(`✓ 識別到 ${storeName}（固定行號 jsonData[${i}]，年度：${yearTarget}，月：${monthTarget}）`);
+                } else if (i === 10) {
+                    // Excel第11行 = jsonData[10] = 耐soi]store
                     storeName = '耐斯店';
-                    console.log(`✓ 識別到 ${storeName} (Excel行號:A${i+1}, 陣列索引:${i}, 年度目標:${yearTarget}, 月目標:${row[3]})`);
-                } else {
-                    // 其他店用年度目標識別
-                    storeName = storeYearTargets[yearTarget];
-                    if (storeName) {
-                        console.log(`✓ 識別到 ${storeName} (Excel行號:A${i+1}, 陣列索引:${i}, 年度目標:${yearTarget}, 月目標:${row[3]})`);
-                    }
+                    console.log(`✓ 識別到 ${storeName}（固定行號 jsonData[${i}]，年度：${yearTarget}，月：${monthTarget}）`);
+                } else if (i === 15) {
+                    // Excel第16行 = jsonData[15] = 垂soi]store
+                    storeName = '垂楊店';
+                    console.log(`✓ 識別到 ${storeName}（固定行號 jsonData[${i}]，年度：${yearTarget}，月：${monthTarget}）`);
+                } else if (i === 19) {
+                    // Excel第20行 = jsonData[19] = MOP 中 [i]store
+                    storeName = '台中三井店';
+                    console.log(`✓ 識別到 ${storeName}（固定行號 jsonData[${i}]，年度：${yearTarget}，月：${monthTarget}）`);
                 }
                 
                 if (storeName) {
-                    // **注意: 月份預估差距已修改為: 實績(row[10]) - 預估業績(row[11])**
+                    
                     data[storeName] = {
-                        yearTarget: row[2],
-                        monthTarget: row[3],
+                        yearTarget: yearTarget,
+                        monthTarget: monthTarget,
                         monthActual: row[10],
                         monthEstimate: row[11],
                         monthEstimateRate: (row[12] * 100).toFixed(2),
-                        monthEstimateDiff: row[10] - row[11], // 實績 - 預估業績 (使用者要求修改)
+                        monthEstimateDiff: row[13],
                         lastYearMonth: row[15],
                         monthGrowthRate: (row[16] * 100).toFixed(2),
                         monthGrowthAmount: row[17],
@@ -479,22 +880,165 @@
             return { data, dates };
         }
 
+        // 顯示結果
         function displayResults(data, dates) {
-            const monthlyBody = document.getElementById('monthlyBody');
-            const yearlyBody = document.getElementById('yearlyBody');
-            const reportDateBadge = document.getElementById('reportDate');
-            const monthTitle = document.getElementById('monthTitle');
-            const yearTitle = document.getElementById('yearTitle');
-            
             // 更新日期顯示
             if (dates.reportDate) {
-                reportDateBadge.textContent = dates.reportDate;
+                updateTodayDate(dates.reportDate);
             }
+            
+            // 更新KPI
+            updateKPI(data);
+            
+            // 更新店鋪卡片
+            updateStoreCards(data);
+            
+            // 更新表格
+            updateTables(data, dates);
+        }
+
+        // 更新KPI指標
+        function updateKPI(data) {
+            const storeOrder = ['中港店', '中友店', '台中三井店', '耐斯店', '垂楊店'];
+            let totals = {
+                monthTarget: 0,
+                monthActual: 0,
+                lastYearMonth: 0,
+                monthGrowthAmount: 0,
+                yearTarget: 0,
+                yearActual: 0,
+                lastYearSamePeriod: 0,
+                yearGrowthAmount: 0
+            };
+
+            storeOrder.forEach(storeName => {
+                if (data[storeName]) {
+                    const d = data[storeName];
+                    // 月份數據
+                    totals.monthTarget += parseFloat(d.monthTarget) || 0;
+                    totals.monthActual += parseFloat(d.monthActual) || 0;
+                    totals.lastYearMonth += parseFloat(d.lastYearMonth) || 0;
+                    totals.monthGrowthAmount += parseFloat(d.monthGrowthAmount) || 0;
+                    // 年度數據
+                    totals.yearTarget += parseFloat(d.yearTarget) || 0;
+                    totals.yearActual += parseFloat(d.yearActual) || 0;
+                    totals.lastYearSamePeriod += parseFloat(d.lastYearSamePeriod) || 0;
+                    totals.yearGrowthAmount += parseFloat(d.yearGrowthAmount) || 0;
+                }
+            });
+
+            // 月份計算
+            const monthRate = totals.monthTarget > 0 ? (totals.monthActual / totals.monthTarget * 100).toFixed(1) : 0;
+            const monthGrowth = totals.lastYearMonth > 0 ? (totals.monthGrowthAmount / totals.lastYearMonth * 100).toFixed(1) : 0;
+            const monthDiff = totals.monthActual - totals.monthTarget;
+
+            // 年度計算
+            const yearRate = totals.yearTarget > 0 ? (totals.yearActual / totals.yearTarget * 100).toFixed(1) : 0;
+            const yearGrowth = totals.lastYearSamePeriod > 0 ? (totals.yearGrowthAmount / totals.lastYearSamePeriod * 100).toFixed(1) : 0;
+            const yearDiff = totals.yearActual - totals.yearTarget;
+
+            // 更新月份KPI
+            document.getElementById('kpiMonthTarget').textContent = formatNumber(totals.monthTarget);
+            document.getElementById('kpiMonthActual').textContent = formatNumber(totals.monthActual);
+            document.getElementById('kpiMonthRate').textContent = monthRate + '%';
+            document.getElementById('kpiMonthGrowth').textContent = monthGrowth + '%';
+            document.getElementById('kpiMonthGrowth').className = `kpi-value ${parseFloat(monthGrowth) >= 0 ? 'positive' : 'negative'}`;
+            document.getElementById('kpiMonthDiff').textContent = formatNumber(monthDiff);
+            document.getElementById('kpiMonthDiff').className = `kpi-value ${monthDiff >= 0 ? 'positive' : 'negative'}`;
+            
+            const changeEl = document.getElementById('kpiMonthChange');
+            changeEl.textContent = `${monthGrowth >= 0 ? '+' : ''}${monthGrowth}% ${monthGrowth >= 0 ? '▲' : '▼'}`;
+            changeEl.className = `kpi-change ${monthGrowth >= 0 ? 'positive' : 'negative'}`;
+
+            // 更新年度KPI
+            document.getElementById('kpiYearTarget').textContent = formatNumber(totals.yearTarget);
+            document.getElementById('kpiYearActual').textContent = formatNumber(totals.yearActual);
+            document.getElementById('kpiYearRate').textContent = yearRate + '%';
+            document.getElementById('kpiYearGrowth').textContent = yearGrowth + '%';
+            document.getElementById('kpiYearGrowth').className = `kpi-value ${parseFloat(yearGrowth) >= 0 ? 'positive' : 'negative'}`;
+            document.getElementById('kpiYearDiff').textContent = formatNumber(yearDiff);
+            document.getElementById('kpiYearDiff').className = `kpi-value ${yearDiff >= 0 ? 'positive' : 'negative'}`;
+            
+            const yearChangeEl = document.getElementById('kpiYearChange');
+            yearChangeEl.textContent = `${yearGrowth >= 0 ? '+' : ''}${yearGrowth}% ${yearGrowth >= 0 ? '▲' : '▼'}`;
+            yearChangeEl.className = `kpi-change ${yearGrowth >= 0 ? 'positive' : 'negative'}`;
+        }
+
+        // 更新店鋪卡片
+        function updateStoreCards(data) {
+            const storeGrid = document.getElementById('storeGrid');
+            storeGrid.innerHTML = '';
+
+            const storeOrder = ['中港店', '中友店', '台中三井店', '耐斯店', '垂楊店'];
+
+            storeOrder.forEach(storeName => {
+                if (data[storeName]) {
+                    const d = data[storeName];
+                    const rate = parseFloat(d.monthTargetRate);
+                    const isSuccess = rate >= 100;
+                    const progressWidth = Math.min(rate, 150);
+
+                    const card = document.createElement('div');
+                    card.className = `store-card ${isSuccess ? 'success' : 'danger'}`;
+                    const monthDiff = parseFloat(d.monthActual) - parseFloat(d.monthTarget);
+                    card.innerHTML = `
+                        <div class="store-header">
+                            <div class="store-name">${storeName}</div>
+                            <div class="store-badge ${isSuccess ? 'success' : 'danger'}">
+                                ${isSuccess ? '✓ 達標' : '✗ 未達標'}
+                            </div>
+                        </div>
+                        <div class="store-metrics">
+                            <div class="metric">
+                                <div class="metric-label">月目標</div>
+                                <div class="metric-value">${formatNumber(d.monthTarget)}</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">月實績</div>
+                                <div class="metric-value ${isSuccess ? 'success' : 'danger'}">${formatNumber(d.monthActual)}</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">達成率</div>
+                                <div class="metric-value ${isSuccess ? 'success' : 'danger'}">${d.monthTargetRate}%</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">成長率</div>
+                                <div class="metric-value ${parseFloat(d.monthGrowthRate) >= 0 ? 'success' : 'danger'}">
+                                    ${d.monthGrowthRate}%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${isSuccess ? 'success' : 'danger'}" style="width: ${progressWidth}%"></div>
+                        </div>
+                        <div class="store-comparison">
+                            <span style="color: var(--color-text-secondary);">vs 去年同期 ${formatNumber(d.lastYearMonth)}</span>
+                            <span class="${parseFloat(d.monthGrowthRate) >= 0 ? 'positive' : 'negative'}" style="font-weight: 700;">
+                                ${parseFloat(d.monthGrowthRate) >= 0 ? '+' : ''}${d.monthGrowthRate}%
+                            </span>
+                        </div>
+                        <div class="store-comparison" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+                            <span style="color: var(--color-text-secondary);">月目標差距</span>
+                            <span class="${monthDiff >= 0 ? 'positive' : 'negative'}" style="font-weight: 700; font-size: 1.05em;">
+                                ${monthDiff >= 0 ? '+' : ''}${formatNumber(monthDiff)}
+                            </span>
+                        </div>
+                    `;
+                    storeGrid.appendChild(card);
+                }
+            });
+        }
+
+        // 更新表格
+        function updateTables(data, dates) {
+            const monthlyBody = document.getElementById('monthlyBody');
+            const yearlyBody = document.getElementById('yearlyBody');
+            
             if (dates.monthRange) {
-                monthTitle.textContent = `📅 月份數據(${dates.monthRange})`;
+                document.getElementById('monthTitle').textContent = `月份數據（${dates.monthRange}）`;
             }
             if (dates.yearRange) {
-                yearTitle.textContent = `📈 年度數據(${dates.yearRange})`;
+                document.getElementById('yearTitle').textContent = `年度數據（${dates.yearRange}）`;
             }
             
             monthlyBody.innerHTML = '';
@@ -506,12 +1050,12 @@
             storeOrder.forEach(storeName => {
                 if (data[storeName]) {
                     const d = data[storeName];
-                    activeStoresData.push(d); // 收集有效的店鋪數據
+                    activeStoresData.push(d);
                     
                     // 月份數據
-                    const monthRow = `
+                    monthlyBody.innerHTML += `
                         <tr>
-                            <td class="store-name">${storeName}</td>
+                            <td class="table-store-name">${storeName}</td>
                             <td>${formatNumber(d.monthTarget)}</td>
                             <td>${formatNumber(d.monthEstimate)}</td>
                             <td>${formatNumber(d.monthActual)}</td>
@@ -524,12 +1068,11 @@
                             <td class="${d.monthTargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(d.monthTargetDiff)}</td>
                         </tr>
                     `;
-                    monthlyBody.innerHTML += monthRow;
 
                     // 年度數據
-                    const yearRow = `
+                    yearlyBody.innerHTML += `
                         <tr>
-                            <td class="store-name">${storeName}</td>
+                            <td class="table-store-name">${storeName}</td>
                             <td>${formatNumber(d.yearTarget)}</td>
                             <td>${formatNumber(d.yearEstimate)}</td>
                             <td>${formatNumber(d.yearActual)}</td>
@@ -542,7 +1085,6 @@
                             <td class="${d.yearTargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(d.yearTargetDiff)}</td>
                         </tr>
                     `;
-                    yearlyBody.innerHTML += yearRow;
                 }
             });
 
@@ -552,12 +1094,9 @@
                 monthlyBody.innerHTML += createTotalRow(totals.month, 'month');
                 yearlyBody.innerHTML += createTotalRow(totals.year, 'year');
             }
-
-
-            resultsSection.style.display = 'block';
-            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
+        // 計算總計
         function calculateTotals(activeStoresData) {
             const totals = {
                 month: {
@@ -568,9 +1107,9 @@
                     lastYearMonth: 0,
                     monthGrowthAmount: 0,
                     monthTargetDiff: 0,
-                    monthEstimateRate: 0, // 需計算
-                    monthGrowthRate: 0, // 需計算
-                    monthTargetRate: 0 // 需計算
+                    monthEstimateRate: 0,
+                    monthGrowthRate: 0,
+                    monthTargetRate: 0
                 },
                 year: {
                     yearTarget: 0,
@@ -580,13 +1119,12 @@
                     lastYearSamePeriod: 0,
                     yearGrowthAmount: 0,
                     yearTargetDiff: 0,
-                    yearEstimateRate: 0, // 需計算
-                    yearGrowthRate: 0, // 需計算
-                    yearTargetRate: 0 // 需計算
+                    yearEstimateRate: 0,
+                    yearGrowthRate: 0,
+                    yearTargetRate: 0
                 }
             };
 
-            // 累加數值
             activeStoresData.forEach(d => {
                 totals.month.monthTarget += parseFloat(d.monthTarget) || 0;
                 totals.month.monthEstimate += parseFloat(d.monthEstimate) || 0;
@@ -606,40 +1144,35 @@
             });
             
             // 計算比例
-            // 月份預估達成率: 月別實績 / 月別預估業績
             if (totals.month.monthEstimate !== 0) {
                 totals.month.monthEstimateRate = (totals.month.monthActual / totals.month.monthEstimate * 100).toFixed(2);
             }
-            // 月份成長比: 成長金額 / 去年同期
             if (totals.month.lastYearMonth !== 0) {
                 totals.month.monthGrowthRate = (totals.month.monthGrowthAmount / totals.month.lastYearMonth * 100).toFixed(2);
             }
-            // 月份目標達成率: 月別實績 / 月目標
             if (totals.month.monthTarget !== 0) {
                 totals.month.monthTargetRate = (totals.month.monthActual / totals.month.monthTarget * 100).toFixed(2);
             }
 
-            // 年度預估達成率: 年計實績 / 年計預估業績
             if (totals.year.yearEstimate !== 0) {
                 totals.year.yearEstimateRate = (totals.year.yearActual / totals.year.yearEstimate * 100).toFixed(2);
             }
-            // 年度成長比: 成長金額 / 同期實績(去年)
             if (totals.year.lastYearSamePeriod !== 0) {
                 totals.year.yearGrowthRate = (totals.year.yearGrowthAmount / totals.year.lastYearSamePeriod * 100).toFixed(2);
             }
-            // 年度目標達成率: 年計實績 / 年度目標
             if (totals.year.yearTarget !== 0) {
                 totals.year.yearTargetRate = (totals.year.yearActual / totals.year.yearTarget * 100).toFixed(2);
             }
             
             return totals;
         }
-        
+
+        // 創建總計行
         function createTotalRow(data, type) {
             if (type === 'month') {
                 return `
                     <tr class="total-row">
-                        <td class="store-name">總計</td>
+                        <td class="table-store-name">總計</td>
                         <td>${formatNumber(data.monthTarget)}</td>
                         <td>${formatNumber(data.monthEstimate)}</td>
                         <td>${formatNumber(data.monthActual)}</td>
@@ -652,10 +1185,10 @@
                         <td class="${data.monthTargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(data.monthTargetDiff)}</td>
                     </tr>
                 `;
-            } else if (type === 'year') {
-                 return `
+            } else {
+                return `
                     <tr class="total-row">
-                        <td class="store-name">總計</td>
+                        <td class="table-store-name">總計</td>
                         <td>${formatNumber(data.yearTarget)}</td>
                         <td>${formatNumber(data.yearEstimate)}</td>
                         <td>${formatNumber(data.yearActual)}</td>
@@ -669,18 +1202,40 @@
                     </tr>
                 `;
             }
-            return '';
         }
 
+        // 分頁切換
+        function switchTab(tabName) {
+            // 切換分頁按鈕
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 切換內容區域
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            if (tabName === 'cards') {
+                document.getElementById('cardsSection').classList.add('active');
+            } else if (tabName === 'monthTable') {
+                document.getElementById('monthTableSection').classList.add('active');
+            } else if (tabName === 'yearTable') {
+                document.getElementById('yearTableSection').classList.add('active');
+            }
+        }
+
+        // 格式化數字
         function formatNumber(num) {
             if (num === undefined || num === null) return '0';
             return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         }
 
+        // 匯出Excel
         function exportToExcel() {
+            if (!currentData) return;
+
             let csv = '\ufeff店鋪銷售數據報表\n\n';
             csv += '月份數據\n';
-            // 標題更新: 目標改為月目標
             csv += '店名,月目標,預估業績,實績,預估達成率,預估差距,去年同期,成長比,成長金額,月計達成率,目標差距\n';
             
             const monthlyRows = document.querySelectorAll('#monthlyBody tr');
@@ -706,6 +1261,60 @@
             link.download = '店鋪銷售數據_' + new Date().toISOString().slice(0, 10) + '.csv';
             link.click();
         }
+
+        // 更新日期顯示（FY26Q1W7 11/7格式）
+        function updateTodayDate(reportDate) {
+            let targetDate, month, date;
+            
+            if (reportDate) {
+                // 使用報表日期
+                const parts = reportDate.split('/');
+                month = parseInt(parts[0]);
+                date = parseInt(parts[1]);
+                // 假設是2025年的日期
+                targetDate = new Date(2025, month - 1, date);
+            } else {
+                // 使用今天的日期
+                targetDate = new Date();
+                month = targetDate.getMonth() + 1;
+                date = targetDate.getDate();
+            }
+            
+            // FY26Q1的週數定義（實際對應表）
+            const fy26q1Weeks = [
+                { week: 1, startDate: new Date(2025, 8, 28) },   // 2025/9/28
+                { week: 2, startDate: new Date(2025, 9, 5) },    // 2025/10/5
+                { week: 3, startDate: new Date(2025, 9, 12) },   // 2025/10/12
+                { week: 4, startDate: new Date(2025, 9, 19) },   // 2025/10/19
+                { week: 5, startDate: new Date(2025, 9, 26) },   // 2025/10/26
+                { week: 6, startDate: new Date(2025, 10, 2) },   // 2025/11/2
+                { week: 7, startDate: new Date(2025, 10, 9) },   // 2025/11/9
+                { week: 8, startDate: new Date(2025, 10, 16) },  // 2025/11/16
+                { week: 9, startDate: new Date(2025, 10, 23) },  // 2025/11/23
+                { week: 10, startDate: new Date(2025, 10, 30) }, // 2025/11/30
+                { week: 11, startDate: new Date(2025, 11, 7) },  // 2025/12/7
+                { week: 12, startDate: new Date(2025, 11, 14) }, // 2025/12/14
+                { week: 13, startDate: new Date(2025, 11, 21) }  // 2025/12/21
+            ];
+            
+            // 找出是第幾週
+            let weekNumber = 1;
+            for (let i = fy26q1Weeks.length - 1; i >= 0; i--) {
+                if (targetDate >= fy26q1Weeks[i].startDate) {
+                    weekNumber = fy26q1Weeks[i].week;
+                    break;
+                }
+            }
+            
+            // 格式化日期
+            const dateStr = `${month}/${date}`;
+            const fyStr = `FY26Q1W${weekNumber}`;
+            
+            document.getElementById('todayDate').textContent = `📅      ${fyStr} ${dateStr}`;
+        }
+
+        // 初始化日期顯示（上傳報表後會更新為報表日期）
+        // updateTodayDate();
     </script>
 </body>
 </html>
