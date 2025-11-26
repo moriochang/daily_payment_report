@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日預估達成報表轉換 - 儀表版</title>
+    <title>日預估達成報表轉換工具</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * {
@@ -198,23 +198,61 @@
 
         .kpi-card {
             background: var(--bg-card);
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 24px;
             box-shadow: var(--shadow);
             transition: all 0.3s ease;
             border-left: 4px solid var(--color-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, rgba(75, 105, 189, 0.05), transparent);
+            border-radius: 0 16px 0 100%;
         }
 
         .kpi-card:hover {
             box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
         }
 
         .kpi-card.success {
             border-left-color: var(--color-success);
+            background: linear-gradient(135deg, #ffffff 0%, rgba(16, 185, 129, 0.03) 100%);
+        }
+
+        .kpi-card.success::before {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), transparent);
         }
 
         .kpi-card.danger {
             border-left-color: var(--color-danger);
+            background: linear-gradient(135deg, #ffffff 0%, rgba(239, 68, 68, 0.03) 100%);
+        }
+
+        .kpi-card.danger::before {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), transparent);
+        }
+
+        .kpi-card.primary {
+            border-left-color: var(--color-primary);
+            background: linear-gradient(135deg, #ffffff 0%, rgba(75, 105, 189, 0.03) 100%);
+        }
+
+        .kpi-card.warning {
+            border-left-color: var(--color-warning);
+            background: linear-gradient(135deg, #ffffff 0%, rgba(245, 158, 11, 0.03) 100%);
+        }
+
+        .kpi-card.warning::before {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), transparent);
         }
 
         .kpi-label {
@@ -599,9 +637,11 @@
         <!-- KPI 指標區域 -->
         <div class="kpi-section" id="kpiSection">
             <!-- 年度數據 -->
-            <h3 style="color: var(--color-primary); margin-bottom: 16px; font-size: 1.1em;">📊 年度總計</h3>
+            <h3 style="color: var(--color-primary); margin-bottom: 20px; font-size: 1.2em; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <span style="background: linear-gradient(135deg, #4b69bd, #6b8dd6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">📊 年度總計</span>
+            </h3>
             <div class="kpi-grid" style="margin-bottom: 30px;">
-                <div class="kpi-card">
+                <div class="kpi-card primary">
                     <div class="kpi-label">年總目標</div>
                     <div class="kpi-value" id="kpiYearTarget">-</div>
                 </div>
@@ -616,20 +656,22 @@
                     <div class="kpi-label">年達成率</div>
                     <div class="kpi-value" id="kpiYearRate">-</div>
                 </div>
-                <div class="kpi-card">
+                <div class="kpi-card warning">
                     <div class="kpi-label">年成長率</div>
                     <div class="kpi-value" id="kpiYearGrowth">-</div>
                 </div>
-                <div class="kpi-card">
+                <div class="kpi-card primary">
                     <div class="kpi-label">目標差距(年度)</div>
                     <div class="kpi-value" id="kpiYearDiff">-</div>
                 </div>
             </div>
 
             <!-- 月份數據 -->
-            <h3 style="color: var(--color-primary); margin-bottom: 16px; font-size: 1.1em;">📅 月份總計</h3>
+            <h3 style="color: var(--color-primary); margin-bottom: 20px; font-size: 1.2em; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <span style="background: linear-gradient(135deg, #4b69bd, #6b8dd6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">📅 月份總計</span>
+            </h3>
             <div class="kpi-grid">
-                <div class="kpi-card">
+                <div class="kpi-card primary">
                     <div class="kpi-label">月總目標</div>
                     <div class="kpi-value" id="kpiMonthTarget">-</div>
                 </div>
@@ -644,11 +686,11 @@
                     <div class="kpi-label">月達成率</div>
                     <div class="kpi-value" id="kpiMonthRate">-</div>
                 </div>
-                <div class="kpi-card">
+                <div class="kpi-card warning">
                     <div class="kpi-label">月成長率</div>
                     <div class="kpi-value" id="kpiMonthGrowth">-</div>
                 </div>
-                <div class="kpi-card">
+                <div class="kpi-card primary">
                     <div class="kpi-label">月目標差距</div>
                     <div class="kpi-value" id="kpiMonthDiff">-</div>
                 </div>
@@ -713,7 +755,7 @@
                                 <th>同期實績<br><small>(去年)</small></th>
                                 <th>成長比</th>
                                 <th>成長金額</th>
-                                <th>年度達成率<br><small>(年度)</small></th>
+                                <th>月計達成率<br><small>(年度)</small></th>
                                 <th>目標差距<br><small>(年度)</small></th>
                             </tr>
                         </thead>
