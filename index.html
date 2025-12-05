@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日預估達成報表轉換工具</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <title>日預估達成報表</title>
     <style>
         * {
             margin: 0;
@@ -12,787 +11,1012 @@
             box-sizing: border-box;
         }
 
-        :root {
-            --bg-primary: #f5f5f5;
-            --bg-card: #ffffff;
-            --color-primary: #4b69bd;
-            --color-success: #10b981;
-            --color-danger: #ef4444;
-            --color-warning: #f59e0b;
-            --color-text: #333333;
-            --color-text-secondary: #666666;
-            --border: #e0e0e0;
-            --shadow: 0 2px 8px rgba(0,0,0,0.1);
-            --shadow-hover: 0 4px 16px rgba(0,0,0,0.15);
-        }
-
         body {
-            font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif;
-            background: var(--bg-primary);
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #0f1419;
             padding: 20px;
-            color: var(--color-text);
+            min-height: 100vh;
         }
 
         .container {
             max-width: 1600px;
             margin: 0 auto;
+            background: #1e2832;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            overflow: hidden;
+            border: 1px solid #2d3748;
         }
 
-        /* ===== 頂部區域 ===== */
         .header {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 24px 32px;
-            margin-bottom: 24px;
-            box-shadow: var(--shadow);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        .header-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .header-title h1 {
-            font-size: 1.8em;
-            color: var(--color-primary);
-            font-weight: 700;
-        }
-        
-        .header-date {
-            color: var(--color-text-secondary);
-            font-size: 0.95em;
-            margin-top: 4px;
-        }
-
-        .header-subtitle {
-            font-size: 1.8em;
-            color: #000000;
-            margin-top: 4px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 700;
-        }
-
-        .today-date {
-            background: var(--bg-primary);
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            color: var(--color-primary);
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 10px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.95em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: var(--color-primary);
+            background: #2d3748;
             color: white;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 1px solid #4a5568;
         }
 
-        .btn-primary:hover {
-            opacity: 0.9;
-            box-shadow: var(--shadow-hover);
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
         }
 
-        .btn-secondary {
-            background: var(--bg-primary);
-            color: var(--color-text);
-            border: 1px solid var(--border);
+        .header .date-info {
+            font-size: 17px;
+            opacity: 0.95;
+            font-weight: 700;
         }
 
-        .btn-secondary:hover {
-            background: #e8e8e8;
-        }
-
-        /* ===== 上傳區域 ===== */
         .upload-section {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 32px;
-            margin-bottom: 24px;
-            box-shadow: var(--shadow);
-            display: none;
-        }
-
-        .upload-section.active {
-            display: block;
+            padding: 30px;
+            text-align: center;
+            background: #161d27;
+            border-bottom: 1px solid #2d3748;
         }
 
         .upload-area {
-            border: 2px dashed var(--color-primary);
-            border-radius: 12px;
-            padding: 40px 20px;
-            text-align: center;
+            border: 2px dashed #4a5568;
+            border-radius: 8px;
+            padding: 40px;
+            background: #1e2832;
             cursor: pointer;
-            transition: all 0.3s ease;
-            background: #f8f9ff;
+            transition: all 0.2s;
         }
 
         .upload-area:hover {
-            background: #eef1ff;
-            border-color: var(--color-primary);
+            border-color: #64748b;
+            background: #2d3748;
         }
 
-        .upload-icon {
-            font-size: 3em;
-            margin-bottom: 12px;
-            color: var(--color-primary);
-        }
-
-        .upload-text {
-            font-size: 1.1em;
-            color: var(--color-text);
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .upload-hint {
-            color: var(--color-text-secondary);
-            font-size: 0.9em;
+        .upload-area.dragover {
+            border-color: #3b82f6;
+            background: #2d3748;
         }
 
         #fileInput {
             display: none;
         }
 
-        /* ===== KPI 卡片區 ===== */
-        .kpi-section {
-            display: none;
-            margin-bottom: 24px;
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
         }
 
-        .kpi-section.active {
-            display: block;
-        }
-
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-
-        .kpi-card {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
-            border-left: 4px solid var(--color-primary);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .kpi-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, rgba(75, 105, 189, 0.05), transparent);
-            border-radius: 0 16px 0 100%;
-        }
-
-        .kpi-card:hover {
-            box-shadow: var(--shadow-hover);
-            transform: translateY(-2px);
-        }
-
-        .kpi-card.success {
-            border-left-color: var(--color-success);
-            background: linear-gradient(135deg, #ffffff 0%, rgba(16, 185, 129, 0.03) 100%);
-        }
-
-        .kpi-card.success::before {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), transparent);
-        }
-
-        .kpi-card.danger {
-            border-left-color: var(--color-danger);
-            background: linear-gradient(135deg, #ffffff 0%, rgba(239, 68, 68, 0.03) 100%);
-        }
-
-        .kpi-card.danger::before {
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), transparent);
-        }
-
-        .kpi-card.primary {
-            border-left-color: var(--color-primary);
-            background: linear-gradient(135deg, #ffffff 0%, rgba(75, 105, 189, 0.03) 100%);
-        }
-
-        .kpi-card.warning {
-            border-left-color: var(--color-warning);
-            background: linear-gradient(135deg, #ffffff 0%, rgba(245, 158, 11, 0.03) 100%);
-        }
-
-        .kpi-card.warning::before {
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), transparent);
-        }
-
-        .kpi-label {
-            font-size: 0.9em;
-            color: var(--color-text-secondary);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .kpi-value {
-            font-size: 2em;
-            font-weight: 700;
-            color: var(--color-text);
-        }
-
-        .kpi-change {
-            font-size: 0.95em;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .kpi-change.positive {
-            color: var(--color-success);
-        }
-
-        .kpi-change.negative {
-            color: var(--color-danger);
-        }
-
-        /* ===== 分頁 ===== */
-        .tabs {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 8px;
-            margin-bottom: 24px;
-            box-shadow: var(--shadow);
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .tab {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            background: transparent;
-            color: var(--color-text-secondary);
-            font-size: 0.95em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .tab:hover {
-            background: var(--bg-primary);
-        }
-
-        .tab.active {
-            background: var(--color-primary);
-            color: white;
-        }
-
-        /* ===== 店鋪卡片網格 ===== */
-        .content-section {
-            display: none;
-        }
-
-        .content-section.active {
-            display: block;
-        }
-
-        .store-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-
-        .store-card {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
-            border-left: 4px solid var(--color-primary);
-            position: relative;
-        }
-
-        .store-card:hover {
-            box-shadow: var(--shadow-hover);
-        }
-
-        .store-card.success {
-            border-left-color: var(--color-success);
-        }
-
-        .store-card.danger {
-            border-left-color: var(--color-danger);
-        }
-
-        .store-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid var(--border);
-        }
-
-        .store-name {
-            font-size: 1.3em;
-            font-weight: 700;
-            color: var(--color-primary);
-        }
-
-        .store-badge {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
-
-        .store-badge.success {
-            background: #d1fae5;
-            color: var(--color-success);
-        }
-
-        .store-badge.danger {
-            background: #fee2e2;
-            color: var(--color-danger);
-        }
-
-        .store-metrics {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .metric {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .metric-label {
-            font-size: 0.85em;
-            color: var(--color-text-secondary);
-            font-weight: 500;
-        }
-
-        .metric-value {
-            font-size: 1.2em;
-            font-weight: 700;
-            color: var(--color-text);
-        }
-
-        .metric-value.success {
-            color: var(--color-success);
-        }
-
-        .metric-value.danger {
-            color: var(--color-danger);
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: var(--border);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 12px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--color-primary);
-            transition: width 0.5s ease;
-            border-radius: 4px;
-        }
-
-        .progress-fill.success {
-            background: var(--color-success);
-        }
-
-        .progress-fill.danger {
-            background: var(--color-danger);
-        }
-
-        .store-comparison {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid var(--border);
-            font-size: 0.9em;
-        }
-
-        /* ===== 表格區域 ===== */
-        .table-section {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 32px;
-            box-shadow: var(--shadow);
-            margin-bottom: 24px;
+        .table-container {
+            padding: 30px;
             overflow-x: auto;
-        }
-
-        .section-title {
-            font-size: 1.5em;
-            font-weight: 700;
-            color: var(--color-text);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            background: #1e2832;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            overflow: hidden;
+            font-size: 14px;
+            background: #161d27;
         }
 
         thead {
-            background: var(--color-primary);
+            background: #2d3748;
             color: white;
         }
 
         th {
-            padding: 16px 12px;
+            padding: 10px 6px;
+            font-weight: 600;
             text-align: center;
-            font-weight: 700;
-            font-size: calc(0.9em + 2px);
-            border: 1px solid rgba(255,255,255,0.3);
+            white-space: nowrap;
+            border-right: 1px solid #4a5568;
+            font-size: 13px;
+        }
+
+        th:last-child {
+            border-right: none;
         }
 
         td {
-            padding: 14px 12px;
-            text-align: center;
-            border: 1px solid var(--border);
-            font-size: 0.95em;
+            padding: 8px 6px;
+            text-align: right;
+            border-bottom: 1px solid #2d3748;
+            border-right: 1px solid #2d3748;
+            color: #e2e8f0;
         }
 
-        tbody tr {
-            transition: all 0.2s ease;
+        td:last-child {
+            border-right: none;
+        }
+
+        td:first-child {
+            text-align: center;
+            font-weight: 600;
+            color: #94a3b8;
         }
 
         tbody tr:hover {
-            background: #f8f9ff;
-        }
-
-        tbody tr:nth-child(even) {
-            background: #fafafa;
-        }
-
-        tbody tr:nth-child(even):hover {
-            background: #f8f9ff;
-        }
-
-        .table-store-name {
-            font-weight: 700;
-            color: var(--color-primary);
-            text-align: left;
-            padding-left: 20px;
-        }
-
-        .total-row {
-            font-weight: 700;
-            background: #f1f5ff !important;
-            border-top: 3px double var(--color-primary);
-        }
-
-        .total-row:hover {
-            background: #f1f5ff !important;
-        }
-
-        .total-row .table-store-name {
-            color: var(--color-text);
+            background: #2d3748;
         }
 
         .positive {
-            color: var(--color-success);
+            color: #10b981;
             font-weight: 600;
         }
 
         .negative {
-            color: var(--color-danger);
+            color: #ef4444;
             font-weight: 600;
         }
 
-        /* ===== 響應式 ===== */
+        .section-divider {
+            background: #2d3748;
+            height: 2px;
+        }
+
+        .section-title {
+            background: #1e2832;
+            padding: 15px 30px;
+            font-weight: 600;
+            font-size: 18px;
+            color: #e2e8f0;
+            border-bottom: 1px solid #2d3748;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .section-title-text {
+            text-align: center;
+        }
+
+        .export-btn-wrapper {
+            position: absolute;
+            right: 30px;
+        }
+
+        .accumulated-info {
+            background: #161d27;
+            padding: 10px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #94a3b8;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        .region-selector {
+            padding: 20px 30px;
+            background: #1e2832;
+            border-bottom: 2px solid #2d3748;
+        }
+
+        .region-cards {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .region-card {
+            padding: 10px 20px;
+            background: #1e2832;
+            border: 1px solid #4a5568;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .region-card:hover {
+            background: #2d3748;
+            border-color: #64748b;
+            color: #e2e8f0;
+        }
+
+        .region-card.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .no-data {
+            padding: 60px 30px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 16px;
+            background: #1e2832;
+        }
+
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 10px 5px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #2563eb;
+        }
+
+        .export-btn-container {
+            padding: 20px 30px;
+            background: #1e2832;
+            border-bottom: 1px solid #2d3748;
+            text-align: center;
+        }
+
+        .export-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .export-btn:hover {
+            background: #059669;
+        }
+
+        .export-btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
         @media (max-width: 768px) {
-            .header {
-                padding: 20px;
+            .section-title {
+                flex-direction: column;
+                gap: 10px;
             }
-
-            .header-title h1 {
-                font-size: 1.4em;
+            
+            .export-btn-wrapper {
+                position: static;
             }
-
-            .kpi-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .store-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .tabs {
-                overflow-x: auto;
-            }
-
-            .table-section {
-                padding: 20px;
-            }
-
-            th, td {
-                padding: 10px 6px;
-                font-size: 0.85em;
+            
+            .export-btn {
+                padding: 8px 16px;
+                font-size: 13px;
             }
         }
 
-        /* ===== 載入動畫 ===== */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
+        @media print {
+            body {
+                background: white;
+                padding: 0;
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+            .container {
+                box-shadow: none;
             }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease;
+            .upload-section {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 頂部區域 -->
-        <div class="header fade-in">
-            <div class="header-title">
-                <div>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 2em;">📊</span>
-                        <h1>日預估達成報表轉換工具</h1>
-                    </div>
-                    <div class="header-subtitle">
-                        <span id="todayDate"></span>
-                    </div>
-                </div>
-            </div>
-            <div class="header-actions">
-                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
-                    📂 上傳報表
-                </button>
-                <button class="btn btn-secondary" onclick="exportToExcel()" id="exportBtn" style="display: none;">
-                    📥 匯出Excel
-                </button>
-            </div>
+        <div class="header">
+            <h1>📊 iStore Taiwan 日預估達成報表</h1>
+            <div class="date-info" id="dateInfo">請上傳JSON檔案</div>
         </div>
 
-        <!-- 上傳區域 -->
-        <div class="upload-section active" id="uploadSection">
+        <div class="upload-section">
             <div class="upload-area" id="uploadArea">
-                <div class="upload-icon">📈</div>
-                <div class="upload-text">拖曳Excel文件至此處</div>
-                <div class="upload-hint">或點擊選擇文件（支援 .xlsx 格式）</div>
+                <div class="upload-icon">📁</div>
+                <p style="font-size: 16px; margin-bottom: 10px; color: #e2e8f0;">
+                    <strong>點擊或拖曳上傳 JSON 檔案</strong>
+                </p>
+                <p style="font-size: 14px; color: #94a3b8;">
+                    支援格式：json
+                </p>
+                <input type="file" id="fileInput" accept=".json">
             </div>
-            <input type="file" id="fileInput" accept=".xlsx">
         </div>
 
-        <!-- KPI 指標區域 -->
-        <div class="kpi-section" id="kpiSection">
-            <!-- 年度數據 -->
-            <h3 style="color: var(--color-primary); margin-bottom: 20px; font-size: 1.2em; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                <span style="background: linear-gradient(135deg, #4b69bd, #6b8dd6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">📊 年度總計</span>
-            </h3>
-            <div class="kpi-grid" style="margin-bottom: 30px;">
-                <div class="kpi-card primary">
-                    <div class="kpi-label">年總目標</div>
-                    <div class="kpi-value" id="kpiYearTarget">-</div>
-                </div>
-                <div class="kpi-card success">
-                    <div class="kpi-label">年總實績</div>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div class="kpi-value" id="kpiYearActual">-</div>
-                        <div class="kpi-change positive" id="kpiYearChange" style="font-size: 1.2em; white-space: nowrap;">-</div>
-                    </div>
-                </div>
-                <div class="kpi-card success">
-                    <div class="kpi-label">年達成率</div>
-                    <div class="kpi-value" id="kpiYearRate">-</div>
-                </div>
-                <div class="kpi-card warning">
-                    <div class="kpi-label">年成長率</div>
-                    <div class="kpi-value" id="kpiYearGrowth">-</div>
-                </div>
-                <div class="kpi-card primary">
-                    <div class="kpi-label">目標差距(年度)</div>
-                    <div class="kpi-value" id="kpiYearDiff">-</div>
-                </div>
+        <div class="region-selector">
+            <div class="region-cards">
+                <div class="region-card active" data-region="全社">全社</div>
+                <div class="region-card" data-region="北一區">北一區</div>
+                <div class="region-card" data-region="北二區">北二區</div>
+                <div class="region-card" data-region="中區">中區</div>
+                <div class="region-card" data-region="台南區">台南區</div>
+                <div class="region-card" data-region="高雄區">高雄區</div>
             </div>
+        </div>
 
-            <!-- 月份數據 -->
-            <h3 style="color: var(--color-primary); margin-bottom: 20px; font-size: 1.2em; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                <span style="background: linear-gradient(135deg, #4b69bd, #6b8dd6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">📅 月份總計</span>
-            </h3>
-            <div class="kpi-grid">
-                <div class="kpi-card primary">
-                    <div class="kpi-label">月總目標</div>
-                    <div class="kpi-value" id="kpiMonthTarget">-</div>
-                </div>
-                <div class="kpi-card success">
-                    <div class="kpi-label">月總實績</div>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div class="kpi-value" id="kpiMonthActual">-</div>
-                        <div class="kpi-change positive" id="kpiMonthChange" style="font-size: 1.2em; white-space: nowrap;">-</div>
-                    </div>
-                </div>
-                <div class="kpi-card success">
-                    <div class="kpi-label">月達成率</div>
-                    <div class="kpi-value" id="kpiMonthRate">-</div>
-                </div>
-                <div class="kpi-card warning">
-                    <div class="kpi-label">月成長率</div>
-                    <div class="kpi-value" id="kpiMonthGrowth">-</div>
-                </div>
-                <div class="kpi-card primary">
-                    <div class="kpi-label">月目標差距</div>
-                    <div class="kpi-value" id="kpiMonthDiff">-</div>
-                </div>
-            </div>
+        <div id="dataDisplay" class="no-data">
+            尚未載入數據，請上傳JSON檔案
+        </div>
+    </div>
 
-            <!-- 分頁 -->
-            <div class="tabs">
-                <button class="tab active" onclick="switchTab('cards')">📊 店鋪卡片</button>
-                <button class="tab" onclick="switchTab('monthTable')">📅 月份表格</button>
-                <button class="tab" onclick="switchTab('yearTable')">📈 年度表格</button>
-            </div>
+    <div style="text-align: center; padding: 20px; color: #94a3b8; font-size: 14px;">
+        Created by Morio © 2025
+    </div>
 
-            <!-- 店鋪卡片視圖 -->
-            <div class="content-section active" id="cardsSection">
-                <div class="store-grid" id="storeGrid"></div>
-            </div>
+    <script>
+        // 區域定義
+        const regions = {
+            '全社': ['45', '47', '48', '51', '57', '65', '61', '75', '76', '77', '81', '84', '86', '88', '89', '97', '115', '116', '117', '820'],
+            '北一區': ['45', '47', '48'],
+            '北二區': ['51', '57', '65', '61'],
+            '中區': ['75', '76', '77', '81', '84'],
+            '台南區': ['86', '88', '89', '97'],
+            '高雄區': ['115', '116', '117']
+        };
 
-            <!-- 月份表格視圖 -->
-            <div class="content-section" id="monthTableSection">
-                <div class="table-section">
+        let currentRegion = '全社';
+        let currentData = null;
+        let currentYesterdayStr = '';
+        let currentRemainingDaysInMonth = 0;
+        let currentRemainingDaysInYear = 0;
+
+        // 季度資料
+        const quarterData = [
+            {"Quarter":"24Q1","Week":"W1","StartDate":"2023-10-01"},
+            {"Quarter":"24Q1","Week":"W2","StartDate":"2023-10-08"},
+            {"Quarter":"24Q1","Week":"W3","StartDate":"2023-10-15"},
+            {"Quarter":"24Q1","Week":"W4","StartDate":"2023-10-22"},
+            {"Quarter":"24Q1","Week":"W5","StartDate":"2023-10-29"},
+            {"Quarter":"24Q1","Week":"W6","StartDate":"2023-11-05"},
+            {"Quarter":"24Q1","Week":"W7","StartDate":"2023-11-12"},
+            {"Quarter":"24Q1","Week":"W8","StartDate":"2023-11-19"},
+            {"Quarter":"24Q1","Week":"W9","StartDate":"2023-11-26"},
+            {"Quarter":"24Q1","Week":"W10","StartDate":"2023-12-03"},
+            {"Quarter":"24Q1","Week":"W11","StartDate":"2023-12-10"},
+            {"Quarter":"24Q1","Week":"W12","StartDate":"2023-12-17"},
+            {"Quarter":"24Q1","Week":"W13","StartDate":"2023-12-24"},
+            {"Quarter":"24Q2","Week":"W1","StartDate":"2023-12-31"},
+            {"Quarter":"24Q2","Week":"W2","StartDate":"2024-01-07"},
+            {"Quarter":"24Q2","Week":"W3","StartDate":"2024-01-14"},
+            {"Quarter":"24Q2","Week":"W4","StartDate":"2024-01-21"},
+            {"Quarter":"24Q2","Week":"W5","StartDate":"2024-01-28"},
+            {"Quarter":"24Q2","Week":"W6","StartDate":"2024-02-04"},
+            {"Quarter":"24Q2","Week":"W7","StartDate":"2024-02-11"},
+            {"Quarter":"24Q2","Week":"W8","StartDate":"2024-02-18"},
+            {"Quarter":"24Q2","Week":"W9","StartDate":"2024-02-25"},
+            {"Quarter":"24Q2","Week":"W10","StartDate":"2024-03-03"},
+            {"Quarter":"24Q2","Week":"W11","StartDate":"2024-03-10"},
+            {"Quarter":"24Q2","Week":"W12","StartDate":"2024-03-17"},
+            {"Quarter":"24Q2","Week":"W13","StartDate":"2024-03-24"},
+            {"Quarter":"24Q3","Week":"W1","StartDate":"2024-04-07"},
+            {"Quarter":"24Q3","Week":"W2","StartDate":"2024-04-14"},
+            {"Quarter":"24Q3","Week":"W3","StartDate":"2024-04-21"},
+            {"Quarter":"24Q3","Week":"W4","StartDate":"2024-04-28"},
+            {"Quarter":"24Q3","Week":"W5","StartDate":"2024-05-05"},
+            {"Quarter":"24Q3","Week":"W6","StartDate":"2024-05-12"},
+            {"Quarter":"24Q3","Week":"W7","StartDate":"2024-05-19"},
+            {"Quarter":"24Q3","Week":"W8","StartDate":"2024-05-26"},
+            {"Quarter":"24Q3","Week":"W9","StartDate":"2024-06-02"},
+            {"Quarter":"24Q3","Week":"W10","StartDate":"2024-06-09"},
+            {"Quarter":"24Q3","Week":"W11","StartDate":"2024-06-16"},
+            {"Quarter":"24Q3","Week":"W12","StartDate":"2024-06-23"},
+            {"Quarter":"24Q3","Week":"W13","StartDate":"2024-06-30"},
+            {"Quarter":"24Q4","Week":"W1","StartDate":"2024-07-07"},
+            {"Quarter":"24Q4","Week":"W2","StartDate":"2024-07-14"},
+            {"Quarter":"24Q4","Week":"W3","StartDate":"2024-07-21"},
+            {"Quarter":"24Q4","Week":"W4","StartDate":"2024-07-28"},
+            {"Quarter":"24Q4","Week":"W5","StartDate":"2024-08-04"},
+            {"Quarter":"24Q4","Week":"W6","StartDate":"2024-08-11"},
+            {"Quarter":"24Q4","Week":"W7","StartDate":"2024-08-18"},
+            {"Quarter":"24Q4","Week":"W8","StartDate":"2024-08-25"},
+            {"Quarter":"24Q4","Week":"W9","StartDate":"2024-09-01"},
+            {"Quarter":"24Q4","Week":"W10","StartDate":"2024-09-08"},
+            {"Quarter":"24Q4","Week":"W11","StartDate":"2024-09-15"},
+            {"Quarter":"24Q4","Week":"W12","StartDate":"2024-09-22"},
+            {"Quarter":"24Q4","Week":"W13","StartDate":"2024-09-29"},
+            {"Quarter":"25Q1","Week":"W1","StartDate":"2024-09-29"},
+            {"Quarter":"25Q1","Week":"W2","StartDate":"2024-10-06"},
+            {"Quarter":"25Q1","Week":"W3","StartDate":"2024-10-13"},
+            {"Quarter":"25Q1","Week":"W4","StartDate":"2024-10-20"},
+            {"Quarter":"25Q1","Week":"W5","StartDate":"2024-10-27"},
+            {"Quarter":"25Q1","Week":"W6","StartDate":"2024-11-03"},
+            {"Quarter":"25Q1","Week":"W7","StartDate":"2024-11-10"},
+            {"Quarter":"25Q1","Week":"W8","StartDate":"2024-11-17"},
+            {"Quarter":"25Q1","Week":"W9","StartDate":"2024-11-24"},
+            {"Quarter":"25Q1","Week":"W10","StartDate":"2024-12-01"},
+            {"Quarter":"25Q1","Week":"W11","StartDate":"2024-12-08"},
+            {"Quarter":"25Q1","Week":"W12","StartDate":"2024-12-15"},
+            {"Quarter":"25Q1","Week":"W13","StartDate":"2024-12-22"},
+            {"Quarter":"25Q2","Week":"W1","StartDate":"2024-12-29"},
+            {"Quarter":"25Q2","Week":"W2","StartDate":"2025-01-05"},
+            {"Quarter":"25Q2","Week":"W3","StartDate":"2025-01-12"},
+            {"Quarter":"25Q2","Week":"W4","StartDate":"2025-01-19"},
+            {"Quarter":"25Q2","Week":"W5","StartDate":"2025-01-26"},
+            {"Quarter":"25Q2","Week":"W6","StartDate":"2025-02-02"},
+            {"Quarter":"25Q2","Week":"W7","StartDate":"2025-02-09"},
+            {"Quarter":"25Q2","Week":"W8","StartDate":"2025-02-16"},
+            {"Quarter":"25Q2","Week":"W9","StartDate":"2025-02-23"},
+            {"Quarter":"25Q2","Week":"W10","StartDate":"2025-03-02"},
+            {"Quarter":"25Q2","Week":"W11","StartDate":"2025-03-09"},
+            {"Quarter":"25Q2","Week":"W12","StartDate":"2025-03-16"},
+            {"Quarter":"25Q2","Week":"W13","StartDate":"2025-03-23"},
+            {"Quarter":"25Q3","Week":"W1","StartDate":"2025-03-30"},
+            {"Quarter":"25Q3","Week":"W2","StartDate":"2025-04-06"},
+            {"Quarter":"25Q3","Week":"W3","StartDate":"2025-04-13"},
+            {"Quarter":"25Q3","Week":"W4","StartDate":"2025-04-20"},
+            {"Quarter":"25Q3","Week":"W5","StartDate":"2025-04-27"},
+            {"Quarter":"25Q3","Week":"W6","StartDate":"2025-05-04"},
+            {"Quarter":"25Q3","Week":"W7","StartDate":"2025-05-11"},
+            {"Quarter":"25Q3","Week":"W8","StartDate":"2025-05-18"},
+            {"Quarter":"25Q3","Week":"W9","StartDate":"2025-05-25"},
+            {"Quarter":"25Q3","Week":"W10","StartDate":"2025-06-01"},
+            {"Quarter":"25Q3","Week":"W11","StartDate":"2025-06-08"},
+            {"Quarter":"25Q3","Week":"W12","StartDate":"2025-06-15"},
+            {"Quarter":"25Q3","Week":"W13","StartDate":"2025-06-22"},
+            {"Quarter":"25Q4","Week":"W1","StartDate":"2025-06-29"},
+            {"Quarter":"25Q4","Week":"W2","StartDate":"2025-07-06"},
+            {"Quarter":"25Q4","Week":"W3","StartDate":"2025-07-13"},
+            {"Quarter":"25Q4","Week":"W4","StartDate":"2025-07-20"},
+            {"Quarter":"25Q4","Week":"W5","StartDate":"2025-07-27"},
+            {"Quarter":"25Q4","Week":"W6","StartDate":"2025-08-03"},
+            {"Quarter":"25Q4","Week":"W7","StartDate":"2025-08-10"},
+            {"Quarter":"25Q4","Week":"W8","StartDate":"2025-08-17"},
+            {"Quarter":"25Q4","Week":"W9","StartDate":"2025-08-24"},
+            {"Quarter":"25Q4","Week":"W10","StartDate":"2025-08-31"},
+            {"Quarter":"25Q4","Week":"W11","StartDate":"2025-09-07"},
+            {"Quarter":"25Q4","Week":"W12","StartDate":"2025-09-14"},
+            {"Quarter":"25Q4","Week":"W13","StartDate":"2025-09-21"},
+            {"Quarter":"26Q1","Week":"W1","StartDate":"2025-09-28"},
+            {"Quarter":"26Q1","Week":"W2","StartDate":"2025-10-05"},
+            {"Quarter":"26Q1","Week":"W3","StartDate":"2025-10-12"},
+            {"Quarter":"26Q1","Week":"W4","StartDate":"2025-10-19"},
+            {"Quarter":"26Q1","Week":"W5","StartDate":"2025-10-26"},
+            {"Quarter":"26Q1","Week":"W6","StartDate":"2025-11-02"},
+            {"Quarter":"26Q1","Week":"W7","StartDate":"2025-11-09"},
+            {"Quarter":"26Q1","Week":"W8","StartDate":"2025-11-16"},
+            {"Quarter":"26Q1","Week":"W9","StartDate":"2025-11-23"},
+            {"Quarter":"26Q1","Week":"W10","StartDate":"2025-11-30"},
+            {"Quarter":"26Q1","Week":"W11","StartDate":"2025-12-07"},
+            {"Quarter":"26Q1","Week":"W12","StartDate":"2025-12-14"},
+            {"Quarter":"26Q1","Week":"W13","StartDate":"2025-12-21"},
+            {"Quarter":"26Q2","Week":"W1","StartDate":"2025-12-28"},
+            {"Quarter":"26Q2","Week":"W2","StartDate":"2026-01-04"},
+            {"Quarter":"26Q2","Week":"W3","StartDate":"2026-01-11"},
+            {"Quarter":"26Q2","Week":"W4","StartDate":"2026-01-18"},
+            {"Quarter":"26Q2","Week":"W5","StartDate":"2026-01-25"},
+            {"Quarter":"26Q2","Week":"W6","StartDate":"2026-02-01"},
+            {"Quarter":"26Q2","Week":"W7","StartDate":"2026-02-08"},
+            {"Quarter":"26Q2","Week":"W8","StartDate":"2026-02-15"},
+            {"Quarter":"26Q2","Week":"W9","StartDate":"2026-02-22"},
+            {"Quarter":"26Q2","Week":"W10","StartDate":"2026-03-01"},
+            {"Quarter":"26Q2","Week":"W11","StartDate":"2026-03-08"},
+            {"Quarter":"26Q2","Week":"W12","StartDate":"2026-03-15"},
+            {"Quarter":"26Q2","Week":"W13","StartDate":"2026-03-22"},
+            {"Quarter":"26Q3","Week":"W1","StartDate":"2026-03-29"},
+            {"Quarter":"26Q3","Week":"W2","StartDate":"2026-04-05"},
+            {"Quarter":"26Q3","Week":"W3","StartDate":"2026-04-12"},
+            {"Quarter":"26Q3","Week":"W4","StartDate":"2026-04-19"},
+            {"Quarter":"26Q3","Week":"W5","StartDate":"2026-04-26"},
+            {"Quarter":"26Q3","Week":"W6","StartDate":"2026-05-03"},
+            {"Quarter":"26Q3","Week":"W7","StartDate":"2026-05-10"},
+            {"Quarter":"26Q3","Week":"W8","StartDate":"2026-05-17"},
+            {"Quarter":"26Q3","Week":"W9","StartDate":"2026-05-24"},
+            {"Quarter":"26Q3","Week":"W10","StartDate":"2026-05-31"},
+            {"Quarter":"26Q3","Week":"W11","StartDate":"2026-06-07"},
+            {"Quarter":"26Q3","Week":"W12","StartDate":"2026-06-14"},
+            {"Quarter":"26Q3","Week":"W13","StartDate":"2026-06-21"},
+            {"Quarter":"26Q4","Week":"W1","StartDate":"2026-06-28"},
+            {"Quarter":"26Q4","Week":"W2","StartDate":"2026-07-05"},
+            {"Quarter":"26Q4","Week":"W3","StartDate":"2026-07-12"},
+            {"Quarter":"26Q4","Week":"W4","StartDate":"2026-07-19"},
+            {"Quarter":"26Q4","Week":"W5","StartDate":"2026-07-26"},
+            {"Quarter":"26Q4","Week":"W6","StartDate":"2026-08-02"},
+            {"Quarter":"26Q4","Week":"W7","StartDate":"2026-08-09"},
+            {"Quarter":"26Q4","Week":"W8","StartDate":"2026-08-16"},
+            {"Quarter":"26Q4","Week":"W9","StartDate":"2026-08-23"},
+            {"Quarter":"26Q4","Week":"W10","StartDate":"2026-08-30"},
+            {"Quarter":"26Q4","Week":"W11","StartDate":"2026-09-06"},
+            {"Quarter":"26Q4","Week":"W12","StartDate":"2026-09-13"},
+            {"Quarter":"26Q4","Week":"W13","StartDate":"2026-09-20"},
+            {"Quarter":"27Q1","Week":"W1","StartDate":"2026-09-27"},
+            {"Quarter":"27Q1","Week":"W2","StartDate":"2026-10-04"},
+            {"Quarter":"27Q1","Week":"W3","StartDate":"2026-10-11"},
+            {"Quarter":"27Q1","Week":"W4","StartDate":"2026-10-18"},
+            {"Quarter":"27Q1","Week":"W5","StartDate":"2026-10-25"},
+            {"Quarter":"27Q1","Week":"W6","StartDate":"2026-11-01"},
+            {"Quarter":"27Q1","Week":"W7","StartDate":"2026-11-08"},
+            {"Quarter":"27Q1","Week":"W8","StartDate":"2026-11-15"},
+            {"Quarter":"27Q1","Week":"W9","StartDate":"2026-11-22"},
+            {"Quarter":"27Q1","Week":"W10","StartDate":"2026-11-29"},
+            {"Quarter":"27Q1","Week":"W11","StartDate":"2026-12-06"},
+            {"Quarter":"27Q1","Week":"W12","StartDate":"2026-12-13"},
+            {"Quarter":"27Q1","Week":"W13","StartDate":"2026-12-20"},
+            {"Quarter":"27Q2","Week":"W1","StartDate":"2026-12-27"},
+            {"Quarter":"27Q2","Week":"W2","StartDate":"2027-01-03"},
+            {"Quarter":"27Q2","Week":"W3","StartDate":"2027-01-10"},
+            {"Quarter":"27Q2","Week":"W4","StartDate":"2027-01-17"},
+            {"Quarter":"27Q2","Week":"W5","StartDate":"2027-01-24"},
+            {"Quarter":"27Q2","Week":"W6","StartDate":"2027-01-31"},
+            {"Quarter":"27Q2","Week":"W7","StartDate":"2027-02-07"},
+            {"Quarter":"27Q2","Week":"W8","StartDate":"2027-02-14"},
+            {"Quarter":"27Q2","Week":"W9","StartDate":"2027-02-21"},
+            {"Quarter":"27Q2","Week":"W10","StartDate":"2027-02-28"},
+            {"Quarter":"27Q2","Week":"W11","StartDate":"2027-03-07"},
+            {"Quarter":"27Q2","Week":"W12","StartDate":"2027-03-14"},
+            {"Quarter":"27Q2","Week":"W13","StartDate":"2027-03-21"},
+            {"Quarter":"27Q3","Week":"W1","StartDate":"2027-03-28"},
+            {"Quarter":"27Q3","Week":"W2","StartDate":"2027-04-04"},
+            {"Quarter":"27Q3","Week":"W3","StartDate":"2027-04-11"},
+            {"Quarter":"27Q3","Week":"W4","StartDate":"2027-04-18"},
+            {"Quarter":"27Q3","Week":"W5","StartDate":"2027-04-25"},
+            {"Quarter":"27Q3","Week":"W6","StartDate":"2027-05-02"},
+            {"Quarter":"27Q3","Week":"W7","StartDate":"2027-05-09"},
+            {"Quarter":"27Q3","Week":"W8","StartDate":"2027-05-16"},
+            {"Quarter":"27Q3","Week":"W9","StartDate":"2027-05-23"},
+            {"Quarter":"27Q3","Week":"W10","StartDate":"2027-05-30"},
+            {"Quarter":"27Q3","Week":"W11","StartDate":"2027-06-06"},
+            {"Quarter":"27Q3","Week":"W12","StartDate":"2027-06-13"},
+            {"Quarter":"27Q3","Week":"W13","StartDate":"2027-06-20"},
+            {"Quarter":"27Q4","Week":"W1","StartDate":"2027-06-27"},
+            {"Quarter":"27Q4","Week":"W2","StartDate":"2027-07-04"},
+            {"Quarter":"27Q4","Week":"W3","StartDate":"2027-07-11"},
+            {"Quarter":"27Q4","Week":"W4","StartDate":"2027-07-18"},
+            {"Quarter":"27Q4","Week":"W5","StartDate":"2027-07-25"},
+            {"Quarter":"27Q4","Week":"W6","StartDate":"2027-08-01"},
+            {"Quarter":"27Q4","Week":"W7","StartDate":"2027-08-08"},
+            {"Quarter":"27Q4","Week":"W8","StartDate":"2027-08-15"},
+            {"Quarter":"27Q4","Week":"W9","StartDate":"2027-08-22"},
+            {"Quarter":"27Q4","Week":"W10","StartDate":"2027-08-29"},
+            {"Quarter":"27Q4","Week":"W11","StartDate":"2027-09-05"},
+            {"Quarter":"27Q4","Week":"W12","StartDate":"2027-09-12"},
+            {"Quarter":"27Q4","Week":"W13","StartDate":"2027-09-19"}
+        ];
+
+        // 根據日期查找季度週次
+        function getQuarterWeek(dateStr) {
+            const date = new Date(dateStr);
+            
+            // 找到對應的週次
+            for (let i = 0; i < quarterData.length - 1; i++) {
+                const currentStart = new Date(quarterData[i].StartDate);
+                const nextStart = new Date(quarterData[i + 1].StartDate);
+                
+                if (date >= currentStart && date < nextStart) {
+                    return {
+                        quarter: quarterData[i].Quarter,
+                        week: quarterData[i].Week
+                    };
+                }
+            }
+            
+            // 檢查最後一個區間
+            const lastEntry = quarterData[quarterData.length - 1];
+            const lastStart = new Date(lastEntry.StartDate);
+            if (date >= lastStart) {
+                return {
+                    quarter: lastEntry.Quarter,
+                    week: lastEntry.Week
+                };
+            }
+            
+            return null;
+        }
+
+        // 格式化數字
+        function formatNumber(num) {
+            if (num === null || num === undefined) return '-';
+            return num.toLocaleString('zh-TW');
+        }
+
+        // 格式化百分比
+        function formatPercent(num) {
+            if (num === null || num === undefined) return '-';
+            return num.toFixed(2) + '%';
+        }
+
+        // 取得顏色類別
+        function getColorClass(num) {
+            if (num > 0) return 'positive';
+            if (num < 0) return 'negative';
+            return '';
+        }
+
+        // CSV匯出功能
+        function exportToCSV() {
+            if (!currentData) {
+                alert('請先上傳數據');
+                return;
+            }
+
+            // 取得區域店家資料
+            const regionStoreIds = regions[currentRegion];
+            const filteredStores = currentData.stores.filter(store => regionStoreIds.includes(store.storeId));
+            const sortedStores = [...filteredStores].sort((a, b) => {
+                return parseInt(a.storeId) - parseInt(b.storeId);
+            });
+
+            // 格式化日期
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const year = yesterday.getFullYear();
+            const month = String(yesterday.getMonth() + 1).padStart(2, '0');
+            const day = String(yesterday.getDate()).padStart(2, '0');
+            const dateStr = `${year}年${month}月${day}日`;
+            const dateStrShort = `${month}/${day}`;
+
+            // CSV標題行
+            let csv = '\ufeff'; // UTF-8 BOM
+            csv += `業績總覽 - ${currentRegion} - ${dateStr} - 本月剩餘天數：${currentRemainingDaysInMonth}天\n\n`;
+
+            // 月別數據
+            csv += `月別數據,累計至昨日 ${dateStrShort}  本月剩餘天數：${currentRemainingDaysInMonth}\n`;
+            csv += '店名,目標(月預估),預估業績(月別),實績(月別),預估達成率(月別),預估差距(月別),去年同期,成長比,成長金額,月計達成率(月別),目標差距(月別)\n';
+
+            // 月別數據內容
+            const monthlyTotal = {
+                target: 0,
+                estimatedRevenue: 0,
+                actualRevenue: 0,
+                estimateGap: 0,
+                lastYearSamePeriod: 0,
+                growthAmount: 0,
+                targetGap: 0
+            };
+
+            sortedStores.forEach(store => {
+                const m = store.monthly;
+                monthlyTotal.target += m.target;
+                monthlyTotal.estimatedRevenue += m.estimatedRevenue;
+                monthlyTotal.actualRevenue += m.actualRevenue;
+                monthlyTotal.estimateGap += m.estimateGap;
+                monthlyTotal.lastYearSamePeriod += m.lastYearSamePeriod;
+                monthlyTotal.growthAmount += m.growthAmount;
+                monthlyTotal.targetGap += m.targetGap;
+
+                const achievementRate = m.estimatedRevenue > 0 ? (m.actualRevenue / m.estimatedRevenue * 100) : 0;
+                const growthRate = m.lastYearSamePeriod > 0 ? ((m.actualRevenue - m.lastYearSamePeriod) / m.lastYearSamePeriod * 100) : 0;
+                const targetAchievementRate = m.target > 0 ? (m.actualRevenue / m.target * 100) : 0;
+
+                csv += `${store.storeId},${Math.round(m.target)},${Math.round(m.estimatedRevenue)},${Math.round(m.actualRevenue)},${achievementRate.toFixed(2)}%,${Math.round(m.estimateGap)},${Math.round(m.lastYearSamePeriod)},${growthRate.toFixed(2)}%,${Math.round(m.growthAmount)},${targetAchievementRate.toFixed(2)}%,${Math.round(m.targetGap)}\n`;
+            });
+
+            // 月別總計
+            const monthlyAchievementRate = monthlyTotal.estimatedRevenue > 0 ? (monthlyTotal.actualRevenue / monthlyTotal.estimatedRevenue * 100) : 0;
+            const monthlyGrowthRate = monthlyTotal.lastYearSamePeriod > 0 ? ((monthlyTotal.actualRevenue - monthlyTotal.lastYearSamePeriod) / monthlyTotal.lastYearSamePeriod * 100) : 0;
+            const monthlyTargetAchievementRate = monthlyTotal.target > 0 ? (monthlyTotal.actualRevenue / monthlyTotal.target * 100) : 0;
+
+            csv += `總計,${Math.round(monthlyTotal.target)},${Math.round(monthlyTotal.estimatedRevenue)},${Math.round(monthlyTotal.actualRevenue)},${monthlyAchievementRate.toFixed(2)}%,${Math.round(monthlyTotal.estimateGap)},${Math.round(monthlyTotal.lastYearSamePeriod)},${monthlyGrowthRate.toFixed(2)}%,${Math.round(monthlyTotal.growthAmount)},${monthlyTargetAchievementRate.toFixed(2)}%,${Math.round(monthlyTotal.targetGap)}\n\n`;
+
+            // 年度數據
+            csv += `年度數據,累計至昨日 ${dateStrShort}  本年剩餘天數：${currentRemainingDaysInYear}\n`;
+            csv += '店名,年度目標,預估業績(年計),實績(年計),預估達成率(年計),預估差距(年計),去年同期,成長比,成長金額,年度達成率(年度),目標差距(年度)\n';
+
+            // 年度數據內容
+            const yearlyTotal = {
+                annualTarget: 0,
+                estimatedRevenue: 0,
+                actualRevenue: 0,
+                estimateGap: 0,
+                lastYearSamePeriod: 0,
+                growthAmount: 0,
+                targetGap: 0
+            };
+
+            sortedStores.forEach(store => {
+                const y = store.yearly;
+                yearlyTotal.annualTarget += y.annualTarget;
+                yearlyTotal.estimatedRevenue += y.estimatedRevenue;
+                yearlyTotal.actualRevenue += y.actualRevenue;
+                yearlyTotal.estimateGap += y.estimateGap;
+                yearlyTotal.lastYearSamePeriod += y.lastYearSamePeriod;
+                yearlyTotal.growthAmount += y.growthAmount;
+                yearlyTotal.targetGap += y.targetGap;
+
+                const achievementRate = y.estimatedRevenue > 0 ? (y.actualRevenue / y.estimatedRevenue * 100) : 0;
+                const growthRate = y.lastYearSamePeriod > 0 ? ((y.actualRevenue - y.lastYearSamePeriod) / y.lastYearSamePeriod * 100) : 0;
+                const targetAchievementRate = y.annualTarget > 0 ? (y.actualRevenue / y.annualTarget * 100) : 0;
+
+                csv += `${store.storeId},${Math.round(y.annualTarget)},${Math.round(y.estimatedRevenue)},${Math.round(y.actualRevenue)},${achievementRate.toFixed(2)}%,${Math.round(y.estimateGap)},${Math.round(y.lastYearSamePeriod)},${growthRate.toFixed(2)}%,${Math.round(y.growthAmount)},${targetAchievementRate.toFixed(2)}%,${Math.round(y.targetGap)}\n`;
+            });
+
+            // 年度總計
+            const yearlyAchievementRate = yearlyTotal.estimatedRevenue > 0 ? (yearlyTotal.actualRevenue / yearlyTotal.estimatedRevenue * 100) : 0;
+            const yearlyGrowthRate = yearlyTotal.lastYearSamePeriod > 0 ? ((yearlyTotal.actualRevenue - yearlyTotal.lastYearSamePeriod) / yearlyTotal.lastYearSamePeriod * 100) : 0;
+            const yearlyTargetAchievementRate = yearlyTotal.annualTarget > 0 ? (yearlyTotal.actualRevenue / yearlyTotal.annualTarget * 100) : 0;
+
+            csv += `總計,${Math.round(yearlyTotal.annualTarget)},${Math.round(yearlyTotal.estimatedRevenue)},${Math.round(yearlyTotal.actualRevenue)},${yearlyAchievementRate.toFixed(2)}%,${Math.round(yearlyTotal.estimateGap)},${Math.round(yearlyTotal.lastYearSamePeriod)},${yearlyGrowthRate.toFixed(2)}%,${Math.round(yearlyTotal.growthAmount)},${yearlyTargetAchievementRate.toFixed(2)}%,${Math.round(yearlyTotal.targetGap)}\n`;
+
+            // 下載CSV
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `日預估達成_${currentRegion}_${dateStr}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 渲染表格
+        function renderTable(data, yesterdayStr, remainingDaysInMonth, remainingDaysInYear, region = '全社') {
+            // 按照 storeId 數字排序，並根據區域篩選
+            const regionStoreIds = regions[region];
+            const filteredStores = data.stores.filter(store => regionStoreIds.includes(store.storeId));
+            const sortedStores = [...filteredStores].sort((a, b) => {
+                return parseInt(a.storeId) - parseInt(b.storeId);
+            });
+
+            let html = `
+                <div class="table-container">
                     <div class="section-title">
-                        <span>📅</span>
-                        <span id="monthTitle">月份數據</span>
+                        <span class="section-title-text">📈 月別數據</span>
+                        <div class="export-btn-wrapper">
+                            <button class="export-btn" id="exportBtn" disabled>📥 匯出 CSV</button>
+                        </div>
                     </div>
+                    <div class="accumulated-info">累計至昨日 ${yesterdayStr}&emsp;&emsp;本月剩餘天數：${remainingDaysInMonth}</div>
                     <table>
                         <thead>
                             <tr>
                                 <th>店名</th>
-                                <th>目標<br><small>(月預估)</small></th>
-                                <th>預估業績<br><small>(月別)</small></th>
-                                <th>實績<br><small>(月別)</small></th>
-                                <th>預估達成率<br><small>(月別)</small></th>
-                                <th>預估差距<br><small>(月別)</small></th>
+                                <th>目標<br>(月預估)</th>
+                                <th>預估業績<br>(月別)</th>
+                                <th>實績<br>(月別)</th>
+                                <th>預估達成率<br>(月別)</th>
+                                <th>預估差距<br>(月別)</th>
                                 <th>去年同期</th>
                                 <th>成長比</th>
                                 <th>成長金額</th>
-                                <th>月計達成率<br><small>(月別)</small></th>
-                                <th>目標差距<br><small>(月別)</small></th>
+                                <th>月計達成率<br>(月別)</th>
+                                <th>目標差距<br>(月別)</th>
                             </tr>
                         </thead>
-                        <tbody id="monthlyBody"></tbody>
-                    </table>
-                </div>
-            </div>
+                        <tbody>
+            `;
 
-            <!-- 年度表格視圖 -->
-            <div class="content-section" id="yearTableSection">
-                <div class="table-section">
+            sortedStores.forEach(store => {
+                const m = store.monthly;
+                html += `
+                    <tr>
+                        <td>${store.storeId}</td>
+                        <td>${formatNumber(m.target)}</td>
+                        <td>${formatNumber(m.estimatedRevenue)}</td>
+                        <td>${formatNumber(m.actualRevenue)}</td>
+                        <td class="${getColorClass(m.achievementRate - 100)}">${formatPercent(m.achievementRate)}</td>
+                        <td class="${getColorClass(m.estimateGap)}">${formatNumber(m.estimateGap)}</td>
+                        <td>${formatNumber(m.lastYearSamePeriod)}</td>
+                        <td class="${getColorClass(m.growthRate)}">${formatPercent(m.growthRate)}</td>
+                        <td class="${getColorClass(m.growthAmount)}">${formatNumber(m.growthAmount)}</td>
+                        <td class="${getColorClass(m.targetAchievementRate - 100)}">${formatPercent(m.targetAchievementRate)}</td>
+                        <td class="${getColorClass(m.targetGap)}">${formatNumber(m.targetGap)}</td>
+                    </tr>
+                `;
+            });
+
+            // 計算月別總計
+            const monthlyTotal = {
+                target: 0,
+                estimatedRevenue: 0,
+                actualRevenue: 0,
+                estimateGap: 0,
+                lastYearSamePeriod: 0,
+                growthAmount: 0,
+                targetGap: 0
+            };
+
+            sortedStores.forEach(store => {
+                const m = store.monthly;
+                monthlyTotal.target += m.target;
+                monthlyTotal.estimatedRevenue += m.estimatedRevenue;
+                monthlyTotal.actualRevenue += m.actualRevenue;
+                monthlyTotal.estimateGap += m.estimateGap;
+                monthlyTotal.lastYearSamePeriod += m.lastYearSamePeriod;
+                monthlyTotal.growthAmount += m.growthAmount;
+                monthlyTotal.targetGap += m.targetGap;
+            });
+
+            // 計算總計的百分比
+            const monthlyAchievementRate = monthlyTotal.estimatedRevenue > 0 
+                ? (monthlyTotal.actualRevenue / monthlyTotal.estimatedRevenue * 100) 
+                : 0;
+            const monthlyGrowthRate = monthlyTotal.lastYearSamePeriod > 0 
+                ? ((monthlyTotal.actualRevenue - monthlyTotal.lastYearSamePeriod) / monthlyTotal.lastYearSamePeriod * 100) 
+                : 0;
+            const monthlyTargetAchievementRate = monthlyTotal.target > 0 
+                ? (monthlyTotal.actualRevenue / monthlyTotal.target * 100) 
+                : 0;
+
+            html += `
+                        </tbody>
+                        <tfoot style="background: #2d3748; font-weight: 700; border-top: 2px solid #4a5568;">
+                            <tr>
+                                <td style="text-align: center; color: #94a3b8;">總計</td>
+                                <td>${formatNumber(monthlyTotal.target)}</td>
+                                <td>${formatNumber(monthlyTotal.estimatedRevenue)}</td>
+                                <td>${formatNumber(monthlyTotal.actualRevenue)}</td>
+                                <td class="${getColorClass(monthlyAchievementRate - 100)}">${formatPercent(monthlyAchievementRate)}</td>
+                                <td class="${getColorClass(monthlyTotal.estimateGap)}">${formatNumber(monthlyTotal.estimateGap)}</td>
+                                <td>${formatNumber(monthlyTotal.lastYearSamePeriod)}</td>
+                                <td class="${getColorClass(monthlyGrowthRate)}">${formatPercent(monthlyGrowthRate)}</td>
+                                <td class="${getColorClass(monthlyTotal.growthAmount)}">${formatNumber(monthlyTotal.growthAmount)}</td>
+                                <td class="${getColorClass(monthlyTargetAchievementRate - 100)}">${formatPercent(monthlyTargetAchievementRate)}</td>
+                                <td class="${getColorClass(monthlyTotal.targetGap)}">${formatNumber(monthlyTotal.targetGap)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    
+                    <div class="section-divider"></div>
+                    
                     <div class="section-title">
-                        <span>📈</span>
-                        <span id="yearTitle">年度數據</span>
+                        <span class="section-title-text">📊 年度數據</span>
                     </div>
+                    <div class="accumulated-info">累計至昨日 ${yesterdayStr}&emsp;&emsp;本年剩餘天數：${remainingDaysInYear}</div>
                     <table>
                         <thead>
                             <tr>
                                 <th>店名</th>
                                 <th>年度目標</th>
-                                <th>預估業績<br><small>(年計)</small></th>
-                                <th>實績<br><small>(年計)</small></th>
-                                <th>預估達成率<br><small>(年計)</small></th>
-                                <th>預估差距<br><small>(年計)</small></th>
-                                <th>同期實績<br><small>(去年)</small></th>
+                                <th>預估業績<br>(年計)</th>
+                                <th>實績<br>(年計)</th>
+                                <th>預估達成率<br>(年計)</th>
+                                <th>預估差距<br>(年計)</th>
+                                <th>去年同期</th>
                                 <th>成長比</th>
                                 <th>成長金額</th>
-                                <th>月計達成率<br><small>(年度)</small></th>
-                                <th>目標差距<br><small>(年度)</small></th>
+                                <th>年度達成率<br>(年度)</th>
+                                <th>目標差距<br>(年度)</th>
                             </tr>
                         </thead>
-                        <tbody id="yearlyBody"></tbody>
+                        <tbody>
+            `;
+
+            sortedStores.forEach(store => {
+                const y = store.yearly;
+                html += `
+                    <tr>
+                        <td>${store.storeId}</td>
+                        <td>${formatNumber(y.annualTarget)}</td>
+                        <td>${formatNumber(y.estimatedRevenue)}</td>
+                        <td>${formatNumber(y.actualRevenue)}</td>
+                        <td class="${getColorClass(y.achievementRate - 100)}">${formatPercent(y.achievementRate)}</td>
+                        <td class="${getColorClass(y.estimateGap)}">${formatNumber(y.estimateGap)}</td>
+                        <td>${formatNumber(y.lastYearSamePeriod)}</td>
+                        <td class="${getColorClass(y.growthRate)}">${formatPercent(y.growthRate)}</td>
+                        <td class="${getColorClass(y.growthAmount)}">${formatNumber(y.growthAmount)}</td>
+                        <td class="${getColorClass(y.targetAchievementRate - 100)}">${formatPercent(y.targetAchievementRate)}</td>
+                        <td class="${getColorClass(y.targetGap)}">${formatNumber(y.targetGap)}</td>
+                    </tr>
+                `;
+            });
+
+            // 計算年度總計
+            const yearlyTotal = {
+                annualTarget: 0,
+                estimatedRevenue: 0,
+                actualRevenue: 0,
+                estimateGap: 0,
+                lastYearSamePeriod: 0,
+                growthAmount: 0,
+                targetGap: 0
+            };
+
+            sortedStores.forEach(store => {
+                const y = store.yearly;
+                yearlyTotal.annualTarget += y.annualTarget;
+                yearlyTotal.estimatedRevenue += y.estimatedRevenue;
+                yearlyTotal.actualRevenue += y.actualRevenue;
+                yearlyTotal.estimateGap += y.estimateGap;
+                yearlyTotal.lastYearSamePeriod += y.lastYearSamePeriod;
+                yearlyTotal.growthAmount += y.growthAmount;
+                yearlyTotal.targetGap += y.targetGap;
+            });
+
+            // 計算總計的百分比
+            const yearlyAchievementRate = yearlyTotal.estimatedRevenue > 0 
+                ? (yearlyTotal.actualRevenue / yearlyTotal.estimatedRevenue * 100) 
+                : 0;
+            const yearlyGrowthRate = yearlyTotal.lastYearSamePeriod > 0 
+                ? ((yearlyTotal.actualRevenue - yearlyTotal.lastYearSamePeriod) / yearlyTotal.lastYearSamePeriod * 100) 
+                : 0;
+            const yearlyTargetAchievementRate = yearlyTotal.annualTarget > 0 
+                ? (yearlyTotal.actualRevenue / yearlyTotal.annualTarget * 100) 
+                : 0;
+
+            html += `
+                        </tbody>
+                        <tfoot style="background: #2d3748; font-weight: 700; border-top: 2px solid #4a5568;">
+                            <tr>
+                                <td style="text-align: center; color: #94a3b8;">總計</td>
+                                <td>${formatNumber(yearlyTotal.annualTarget)}</td>
+                                <td>${formatNumber(yearlyTotal.estimatedRevenue)}</td>
+                                <td>${formatNumber(yearlyTotal.actualRevenue)}</td>
+                                <td class="${getColorClass(yearlyAchievementRate - 100)}">${formatPercent(yearlyAchievementRate)}</td>
+                                <td class="${getColorClass(yearlyTotal.estimateGap)}">${formatNumber(yearlyTotal.estimateGap)}</td>
+                                <td>${formatNumber(yearlyTotal.lastYearSamePeriod)}</td>
+                                <td class="${getColorClass(yearlyGrowthRate)}">${formatPercent(yearlyGrowthRate)}</td>
+                                <td class="${getColorClass(yearlyTotal.growthAmount)}">${formatNumber(yearlyTotal.growthAmount)}</td>
+                                <td class="${getColorClass(yearlyTargetAchievementRate - 100)}">${formatPercent(yearlyTargetAchievementRate)}</td>
+                                <td class="${getColorClass(yearlyTotal.targetGap)}">${formatNumber(yearlyTotal.targetGap)}</td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
-            </div>
-        </div>
-    </div>
+            `;
 
-    <script>
-        // 店鋪識別映射（使用年度目標+月目標組合）
-        let currentData = null;
-        let currentDates = null;
+            return html;
+        }
 
-        // 上傳功能
+        // 處理檔案上傳
+        function handleFile(file) {
+            if (!file || !file.name.endsWith('.json')) {
+                alert('請上傳 .json 檔案');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // 使用當前日期（今天）
+                    const today = new Date();
+                    const yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    
+                    // 計算本月剩餘天數（包含今天）
+                    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    const remainingDaysInMonth = lastDayOfMonth.getDate() - today.getDate() + 1;
+                    
+                    // 計算本年剩餘天數（包含今天）
+                    const lastDayOfYear = new Date(today.getFullYear(), 11, 31);
+                    const remainingDaysInYear = Math.ceil((lastDayOfYear - today) / (1000 * 60 * 60 * 24)) + 1;
+                    
+                    // 格式化昨天日期
+                    const yesterdayStr = `${yesterday.getMonth() + 1}/${yesterday.getDate()}`;
+                    
+                    // 取得季度週次資訊（使用今天的日期）
+                    const todayDateStr = today.toISOString().split('T')[0];
+                    const quarterWeek = getQuarterWeek(todayDateStr);
+                    
+                    const dateStr = `${today.getMonth() + 1}/${today.getDate()}`;
+                    
+                    if (quarterWeek) {
+                        document.getElementById('dateInfo').textContent = 
+                            `FY${quarterWeek.quarter}${quarterWeek.week} ${dateStr}`;
+                    } else {
+                        document.getElementById('dateInfo').textContent = 
+                            `報表日期: ${dateStr}`;
+                    }
+                    
+                    // 儲存當前數據
+                    currentData = data;
+                    currentYesterdayStr = yesterdayStr;
+                    currentRemainingDaysInMonth = remainingDaysInMonth;
+                    currentRemainingDaysInYear = remainingDaysInYear;
+                    
+                    // 渲染表格（傳入剩餘天數資訊和當前區域）
+                    document.getElementById('dataDisplay').innerHTML = renderTable(data, yesterdayStr, remainingDaysInMonth, remainingDaysInYear, currentRegion);
+                    
+                    // 啟用匯出按鈕並綁定事件
+                    const exportBtn = document.getElementById('exportBtn');
+                    if (exportBtn) {
+                        exportBtn.disabled = false;
+                        exportBtn.onclick = exportToCSV;
+                    }
+                    
+                } catch (error) {
+                    alert('JSON 格式錯誤: ' + error.message);
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // 設定事件監聽
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
 
         uploadArea.addEventListener('click', () => fileInput.click());
-
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.style.background = '#eef1ff';
-        });
-
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.style.background = '#f8f9ff';
-        });
-
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.style.background = '#f8f9ff';
-            if (e.dataTransfer.files.length > 0) {
-                handleFile(e.dataTransfer.files[0]);
-            }
-        });
 
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
@@ -800,563 +1024,55 @@
             }
         });
 
-        // 處理文件
-        async function handleFile(file) {
-            const fileName = file.name.toLowerCase();
-            
-            if (!fileName.endsWith('.xlsx')) {
-                alert('請上傳 Excel 文件（.xlsx格式）！');
-                return;
-            }
+        // 拖曳上傳
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
 
-            try {
-                const arrayBuffer = await file.arrayBuffer();
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                
-                const result = parseExcelData(jsonData);
-                currentData = result.data;
-                currentDates = result.dates;
-                
-                displayResults(result.data, result.dates);
-                
-                // 隱藏上傳區，顯示結果
-                document.getElementById('uploadSection').classList.remove('active');
-                document.getElementById('kpiSection').classList.add('active');
-                document.getElementById('exportBtn').style.display = 'flex';
-                
-            } catch (error) {
-                console.error('Excel解析錯誤:', error);
-                alert('Excel解析失敗！請確認文件格式正確。');
-            }
-        }
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
 
-        // 解析Excel數據
-        function parseExcelData(jsonData) {
-            const data = {};
-            let dates = { reportDate: '', monthRange: '', yearRange: '' };
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
             
-            // 從第一行提取日期資訊
-            if (jsonData.length > 0) {
-                const firstRow = jsonData[0];
-                for (let cell of firstRow) {
-                    if (cell && typeof cell === 'string') {
-                        const reportDateMatch = cell.match(/(\d{1,2}\/\d{1,2})\s*$/);
-                        if (reportDateMatch && !dates.reportDate) {
-                            dates.reportDate = reportDateMatch[1];
-                        }
-                        
-                        const monthRangeMatch = cell.match(/(\d{1,2}\/\d{1,2}~\d{1,2}\/\d{1,2})/);
-                        if (monthRangeMatch) {
-                            const range = monthRangeMatch[1];
-                            if (!range.startsWith('1/1')) {
-                                dates.monthRange = range;
-                            } else {
-                                dates.yearRange = range;
-                            }
-                        }
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        // 區域卡片切換事件
+        document.querySelectorAll('.region-card').forEach(card => {
+            card.addEventListener('click', function() {
+                // 移除所有active類別
+                document.querySelectorAll('.region-card').forEach(c => c.classList.remove('active'));
+                // 添加active到當前卡片
+                this.classList.add('active');
+                
+                // 更新當前區域
+                currentRegion = this.dataset.region;
+                
+                // 如果有數據，重新渲染
+                if (currentData) {
+                    document.getElementById('dataDisplay').innerHTML = renderTable(
+                        currentData, 
+                        currentYesterdayStr, 
+                        currentRemainingDaysInMonth, 
+                        currentRemainingDaysInYear,
+                        currentRegion
+                    );
+                    
+                    // 重新綁定匯出按鈕事件
+                    const exportBtn = document.getElementById('exportBtn');
+                    if (exportBtn) {
+                        exportBtn.disabled = false;
+                        exportBtn.onclick = exportToCSV;
                     }
                 }
-            }
-            
-            // 從第3行開始解析數據
-            for (let i = 2; i < jsonData.length; i++) {
-                const row = jsonData[i];
-                if (!row || row.length < 30) continue;
-                
-                const yearTarget = row[2];
-                const monthTarget = row[3];
-                let storeName = null;
-                
-                // 使用固定行號識別店鋪（根據實際報表位置）
-                if (i === 5) {
-                    // Excel第6行 = jsonData[5] = TC[i]store
-                    storeName = '中港店';
-                    console.log(`✓ 識別到 ${storeName}（固定行號 jsonData[${i}]，年度：${yearTarget}，月：${monthTarget}）`);
-                } else if (i === 6) {
-                    // Excel第7行 = jsonData[6] = 中soi]store
-                    storeName = '中友店';
-                    console.log(`✓ 識別到 ${storeName}（固定行號 jsonData[${i}]，年度：${yearTarget}，月：${monthTarget}）`);
-                } else if (i === 10) {
-                    // Excel第11行 = jsonData[10] = 耐soi]store
-                    storeName = '耐斯店';
-                    console.log(`✓ 識別到 ${storeName}（固定行號 jsonData[${i}]，年度：${yearTarget}，月：${monthTarget}）`);
-                } else if (i === 15) {
-                    // Excel第16行 = jsonData[15] = 垂soi]store
-                    storeName = '垂楊店';
-                    console.log(`✓ 識別到 ${storeName}（固定行號 jsonData[${i}]，年度：${yearTarget}，月：${monthTarget}）`);
-                } else if (i === 19) {
-                    // Excel第20行 = jsonData[19] = MOP 中 [i]store
-                    storeName = '台中三井店';
-                    console.log(`✓ 識別到 ${storeName}（固定行號 jsonData[${i}]，年度：${yearTarget}，月：${monthTarget}）`);
-                }
-                
-                if (storeName) {
-                    
-                    data[storeName] = {
-                        yearTarget: yearTarget,
-                        monthTarget: monthTarget,
-                        monthActual: row[10],
-                        monthEstimate: row[11],
-                        monthEstimateRate: (row[12] * 100).toFixed(2),
-                        monthEstimateDiff: row[13],
-                        lastYearMonth: row[15],
-                        monthGrowthRate: (row[16] * 100).toFixed(2),
-                        monthGrowthAmount: row[17],
-                        monthTargetRate: (row[26] * 100).toFixed(2),
-                        monthTargetDiff: row[27],
-                        yearActual: row[18],
-                        yearEstimate: row[19],
-                        yearEstimateRate: (row[20] * 100).toFixed(2),
-                        yearEstimateDiff: row[21],
-                        lastYearSamePeriod: row[23],
-                        yearGrowthRate: (row[24] * 100).toFixed(2),
-                        yearGrowthAmount: row[25],
-                        yearTargetRate: (row[28] * 100).toFixed(2),
-                        yearTargetDiff: row[29]
-                    };
-                }
-            }
-            
-            return { data, dates };
-        }
-
-        // 顯示結果
-        function displayResults(data, dates) {
-            // 更新日期顯示
-            if (dates.reportDate) {
-                updateTodayDate(dates.reportDate);
-            }
-            
-            // 更新KPI
-            updateKPI(data);
-            
-            // 更新店鋪卡片
-            updateStoreCards(data);
-            
-            // 更新表格
-            updateTables(data, dates);
-        }
-
-        // 更新KPI指標
-        function updateKPI(data) {
-            const storeOrder = ['中港店', '中友店', '台中三井店', '耐斯店', '垂楊店'];
-            let totals = {
-                monthTarget: 0,
-                monthActual: 0,
-                lastYearMonth: 0,
-                monthGrowthAmount: 0,
-                yearTarget: 0,
-                yearActual: 0,
-                lastYearSamePeriod: 0,
-                yearGrowthAmount: 0
-            };
-
-            storeOrder.forEach(storeName => {
-                if (data[storeName]) {
-                    const d = data[storeName];
-                    // 月份數據
-                    totals.monthTarget += parseFloat(d.monthTarget) || 0;
-                    totals.monthActual += parseFloat(d.monthActual) || 0;
-                    totals.lastYearMonth += parseFloat(d.lastYearMonth) || 0;
-                    totals.monthGrowthAmount += parseFloat(d.monthGrowthAmount) || 0;
-                    // 年度數據
-                    totals.yearTarget += parseFloat(d.yearTarget) || 0;
-                    totals.yearActual += parseFloat(d.yearActual) || 0;
-                    totals.lastYearSamePeriod += parseFloat(d.lastYearSamePeriod) || 0;
-                    totals.yearGrowthAmount += parseFloat(d.yearGrowthAmount) || 0;
-                }
             });
-
-            // 月份計算
-            const monthRate = totals.monthTarget > 0 ? (totals.monthActual / totals.monthTarget * 100).toFixed(1) : 0;
-            const monthGrowth = totals.lastYearMonth > 0 ? (totals.monthGrowthAmount / totals.lastYearMonth * 100).toFixed(1) : 0;
-            const monthDiff = totals.monthActual - totals.monthTarget;
-
-            // 年度計算
-            const yearRate = totals.yearTarget > 0 ? (totals.yearActual / totals.yearTarget * 100).toFixed(1) : 0;
-            const yearGrowth = totals.lastYearSamePeriod > 0 ? (totals.yearGrowthAmount / totals.lastYearSamePeriod * 100).toFixed(1) : 0;
-            const yearDiff = totals.yearActual - totals.yearTarget;
-
-            // 更新月份KPI
-            document.getElementById('kpiMonthTarget').textContent = formatNumber(totals.monthTarget);
-            document.getElementById('kpiMonthActual').textContent = formatNumber(totals.monthActual);
-            document.getElementById('kpiMonthRate').textContent = monthRate + '%';
-            document.getElementById('kpiMonthGrowth').textContent = monthGrowth + '%';
-            document.getElementById('kpiMonthGrowth').className = `kpi-value ${parseFloat(monthGrowth) >= 0 ? 'positive' : 'negative'}`;
-            document.getElementById('kpiMonthDiff').textContent = formatNumber(monthDiff);
-            document.getElementById('kpiMonthDiff').className = `kpi-value ${monthDiff >= 0 ? 'positive' : 'negative'}`;
-            
-            const changeEl = document.getElementById('kpiMonthChange');
-            changeEl.textContent = `${monthGrowth >= 0 ? '+' : ''}${monthGrowth}% ${monthGrowth >= 0 ? '▲' : '▼'}`;
-            changeEl.className = `kpi-change ${monthGrowth >= 0 ? 'positive' : 'negative'}`;
-
-            // 更新年度KPI
-            document.getElementById('kpiYearTarget').textContent = formatNumber(totals.yearTarget);
-            document.getElementById('kpiYearActual').textContent = formatNumber(totals.yearActual);
-            document.getElementById('kpiYearRate').textContent = yearRate + '%';
-            document.getElementById('kpiYearGrowth').textContent = yearGrowth + '%';
-            document.getElementById('kpiYearGrowth').className = `kpi-value ${parseFloat(yearGrowth) >= 0 ? 'positive' : 'negative'}`;
-            document.getElementById('kpiYearDiff').textContent = formatNumber(yearDiff);
-            document.getElementById('kpiYearDiff').className = `kpi-value ${yearDiff >= 0 ? 'positive' : 'negative'}`;
-            
-            const yearChangeEl = document.getElementById('kpiYearChange');
-            yearChangeEl.textContent = `${yearGrowth >= 0 ? '+' : ''}${yearGrowth}% ${yearGrowth >= 0 ? '▲' : '▼'}`;
-            yearChangeEl.className = `kpi-change ${yearGrowth >= 0 ? 'positive' : 'negative'}`;
-        }
-
-        // 更新店鋪卡片
-        function updateStoreCards(data) {
-            const storeGrid = document.getElementById('storeGrid');
-            storeGrid.innerHTML = '';
-
-            const storeOrder = ['中港店', '中友店', '台中三井店', '耐斯店', '垂楊店'];
-
-            storeOrder.forEach(storeName => {
-                if (data[storeName]) {
-                    const d = data[storeName];
-                    const rate = parseFloat(d.monthTargetRate);
-                    const isSuccess = rate >= 100;
-                    const progressWidth = Math.min(rate, 150);
-
-                    const card = document.createElement('div');
-                    card.className = `store-card ${isSuccess ? 'success' : 'danger'}`;
-                    const monthDiff = parseFloat(d.monthActual) - parseFloat(d.monthTarget);
-                    card.innerHTML = `
-                        <div class="store-header">
-                            <div class="store-name">${storeName}</div>
-                            <div class="store-badge ${isSuccess ? 'success' : 'danger'}">
-                                ${isSuccess ? '✓ 達標' : '✗ 未達標'}
-                            </div>
-                        </div>
-                        <div class="store-metrics">
-                            <div class="metric">
-                                <div class="metric-label">月目標</div>
-                                <div class="metric-value">${formatNumber(d.monthTarget)}</div>
-                            </div>
-                            <div class="metric">
-                                <div class="metric-label">月實績</div>
-                                <div class="metric-value ${isSuccess ? 'success' : 'danger'}">${formatNumber(d.monthActual)}</div>
-                            </div>
-                            <div class="metric">
-                                <div class="metric-label">達成率</div>
-                                <div class="metric-value ${isSuccess ? 'success' : 'danger'}">${d.monthTargetRate}%</div>
-                            </div>
-                            <div class="metric">
-                                <div class="metric-label">成長率</div>
-                                <div class="metric-value ${parseFloat(d.monthGrowthRate) >= 0 ? 'success' : 'danger'}">
-                                    ${d.monthGrowthRate}%
-                                </div>
-                            </div>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill ${isSuccess ? 'success' : 'danger'}" style="width: ${progressWidth}%"></div>
-                        </div>
-                        <div class="store-comparison">
-                            <span style="color: var(--color-text-secondary);">vs 去年同期 ${formatNumber(d.lastYearMonth)}</span>
-                            <span class="${parseFloat(d.monthGrowthRate) >= 0 ? 'positive' : 'negative'}" style="font-weight: 700;">
-                                ${parseFloat(d.monthGrowthRate) >= 0 ? '+' : ''}${d.monthGrowthRate}%
-                            </span>
-                        </div>
-                        <div class="store-comparison" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
-                            <span style="color: var(--color-text-secondary);">月目標差距</span>
-                            <span class="${monthDiff >= 0 ? 'positive' : 'negative'}" style="font-weight: 700; font-size: 1.05em;">
-                                ${monthDiff >= 0 ? '+' : ''}${formatNumber(monthDiff)}
-                            </span>
-                        </div>
-                    `;
-                    storeGrid.appendChild(card);
-                }
-            });
-        }
-
-        // 更新表格
-        function updateTables(data, dates) {
-            const monthlyBody = document.getElementById('monthlyBody');
-            const yearlyBody = document.getElementById('yearlyBody');
-            
-            if (dates.monthRange) {
-                document.getElementById('monthTitle').textContent = `月份數據（${dates.monthRange}）`;
-            }
-            if (dates.yearRange) {
-                document.getElementById('yearTitle').textContent = `年度數據（${dates.yearRange}）`;
-            }
-            
-            monthlyBody.innerHTML = '';
-            yearlyBody.innerHTML = '';
-
-            const storeOrder = ['中港店', '中友店', '台中三井店', '耐斯店', '垂楊店'];
-            const activeStoresData = [];
-
-            storeOrder.forEach(storeName => {
-                if (data[storeName]) {
-                    const d = data[storeName];
-                    activeStoresData.push(d);
-                    
-                    // 月份數據
-                    monthlyBody.innerHTML += `
-                        <tr>
-                            <td class="table-store-name">${storeName}</td>
-                            <td>${formatNumber(d.monthTarget)}</td>
-                            <td>${formatNumber(d.monthEstimate)}</td>
-                            <td>${formatNumber(d.monthActual)}</td>
-                            <td>${d.monthEstimateRate}%</td>
-                            <td class="${d.monthEstimateDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(d.monthEstimateDiff)}</td>
-                            <td>${formatNumber(d.lastYearMonth)}</td>
-                            <td class="${parseFloat(d.monthGrowthRate) >= 0 ? 'positive' : 'negative'}">${d.monthGrowthRate}%</td>
-                            <td class="${d.monthGrowthAmount >= 0 ? 'positive' : 'negative'}">${formatNumber(d.monthGrowthAmount)}</td>
-                            <td>${d.monthTargetRate}%</td>
-                            <td class="${d.monthTargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(d.monthTargetDiff)}</td>
-                        </tr>
-                    `;
-
-                    // 年度數據
-                    yearlyBody.innerHTML += `
-                        <tr>
-                            <td class="table-store-name">${storeName}</td>
-                            <td>${formatNumber(d.yearTarget)}</td>
-                            <td>${formatNumber(d.yearEstimate)}</td>
-                            <td>${formatNumber(d.yearActual)}</td>
-                            <td>${d.yearEstimateRate}%</td>
-                            <td class="${d.yearEstimateDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(d.yearEstimateDiff)}</td>
-                            <td>${formatNumber(d.lastYearSamePeriod)}</td>
-                            <td class="${parseFloat(d.yearGrowthRate) >= 0 ? 'positive' : 'negative'}">${d.yearGrowthRate}%</td>
-                            <td class="${d.yearGrowthAmount >= 0 ? 'positive' : 'negative'}">${formatNumber(d.yearGrowthAmount)}</td>
-                            <td>${d.yearTargetRate}%</td>
-                            <td class="${d.yearTargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(d.yearTargetDiff)}</td>
-                        </tr>
-                    `;
-                }
-            });
-
-            // 計算並新增總計列
-            if (activeStoresData.length > 0) {
-                const totals = calculateTotals(activeStoresData);
-                monthlyBody.innerHTML += createTotalRow(totals.month, 'month');
-                yearlyBody.innerHTML += createTotalRow(totals.year, 'year');
-            }
-        }
-
-        // 計算總計
-        function calculateTotals(activeStoresData) {
-            const totals = {
-                month: {
-                    monthTarget: 0,
-                    monthEstimate: 0,
-                    monthActual: 0,
-                    monthEstimateDiff: 0,
-                    lastYearMonth: 0,
-                    monthGrowthAmount: 0,
-                    monthTargetDiff: 0,
-                    monthEstimateRate: 0,
-                    monthGrowthRate: 0,
-                    monthTargetRate: 0
-                },
-                year: {
-                    yearTarget: 0,
-                    yearEstimate: 0,
-                    yearActual: 0,
-                    yearEstimateDiff: 0,
-                    lastYearSamePeriod: 0,
-                    yearGrowthAmount: 0,
-                    yearTargetDiff: 0,
-                    yearEstimateRate: 0,
-                    yearGrowthRate: 0,
-                    yearTargetRate: 0
-                }
-            };
-
-            activeStoresData.forEach(d => {
-                totals.month.monthTarget += parseFloat(d.monthTarget) || 0;
-                totals.month.monthEstimate += parseFloat(d.monthEstimate) || 0;
-                totals.month.monthActual += parseFloat(d.monthActual) || 0;
-                totals.month.monthEstimateDiff += parseFloat(d.monthEstimateDiff) || 0;
-                totals.month.lastYearMonth += parseFloat(d.lastYearMonth) || 0;
-                totals.month.monthGrowthAmount += parseFloat(d.monthGrowthAmount) || 0;
-                totals.month.monthTargetDiff += parseFloat(d.monthTargetDiff) || 0;
-                
-                totals.year.yearTarget += parseFloat(d.yearTarget) || 0;
-                totals.year.yearEstimate += parseFloat(d.yearEstimate) || 0;
-                totals.year.yearActual += parseFloat(d.yearActual) || 0;
-                totals.year.yearEstimateDiff += parseFloat(d.yearEstimateDiff) || 0;
-                totals.year.lastYearSamePeriod += parseFloat(d.lastYearSamePeriod) || 0;
-                totals.year.yearGrowthAmount += parseFloat(d.yearGrowthAmount) || 0;
-                totals.year.yearTargetDiff += parseFloat(d.yearTargetDiff) || 0;
-            });
-            
-            // 計算比例
-            if (totals.month.monthEstimate !== 0) {
-                totals.month.monthEstimateRate = (totals.month.monthActual / totals.month.monthEstimate * 100).toFixed(2);
-            }
-            if (totals.month.lastYearMonth !== 0) {
-                totals.month.monthGrowthRate = (totals.month.monthGrowthAmount / totals.month.lastYearMonth * 100).toFixed(2);
-            }
-            if (totals.month.monthTarget !== 0) {
-                totals.month.monthTargetRate = (totals.month.monthActual / totals.month.monthTarget * 100).toFixed(2);
-            }
-
-            if (totals.year.yearEstimate !== 0) {
-                totals.year.yearEstimateRate = (totals.year.yearActual / totals.year.yearEstimate * 100).toFixed(2);
-            }
-            if (totals.year.lastYearSamePeriod !== 0) {
-                totals.year.yearGrowthRate = (totals.year.yearGrowthAmount / totals.year.lastYearSamePeriod * 100).toFixed(2);
-            }
-            if (totals.year.yearTarget !== 0) {
-                totals.year.yearTargetRate = (totals.year.yearActual / totals.year.yearTarget * 100).toFixed(2);
-            }
-            
-            return totals;
-        }
-
-        // 創建總計行
-        function createTotalRow(data, type) {
-            if (type === 'month') {
-                return `
-                    <tr class="total-row">
-                        <td class="table-store-name">總計</td>
-                        <td>${formatNumber(data.monthTarget)}</td>
-                        <td>${formatNumber(data.monthEstimate)}</td>
-                        <td>${formatNumber(data.monthActual)}</td>
-                        <td>${data.monthEstimateRate}%</td>
-                        <td class="${data.monthEstimateDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(data.monthEstimateDiff)}</td>
-                        <td>${formatNumber(data.lastYearMonth)}</td>
-                        <td class="${parseFloat(data.monthGrowthRate) >= 0 ? 'positive' : 'negative'}">${data.monthGrowthRate}%</td>
-                        <td class="${data.monthGrowthAmount >= 0 ? 'positive' : 'negative'}">${formatNumber(data.monthGrowthAmount)}</td>
-                        <td>${data.monthTargetRate}%</td>
-                        <td class="${data.monthTargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(data.monthTargetDiff)}</td>
-                    </tr>
-                `;
-            } else {
-                return `
-                    <tr class="total-row">
-                        <td class="table-store-name">總計</td>
-                        <td>${formatNumber(data.yearTarget)}</td>
-                        <td>${formatNumber(data.yearEstimate)}</td>
-                        <td>${formatNumber(data.yearActual)}</td>
-                        <td>${data.yearEstimateRate}%</td>
-                        <td class="${data.yearEstimateDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(data.yearEstimateDiff)}</td>
-                        <td>${formatNumber(data.lastYearSamePeriod)}</td>
-                        <td class="${parseFloat(data.yearGrowthRate) >= 0 ? 'positive' : 'negative'}">${data.yearGrowthRate}%</td>
-                        <td class="${data.yearGrowthAmount >= 0 ? 'positive' : 'negative'}">${formatNumber(data.yearGrowthAmount)}</td>
-                        <td>${data.yearTargetRate}%</td>
-                        <td class="${data.yearTargetDiff >= 0 ? 'positive' : 'negative'}">${formatNumber(data.yearTargetDiff)}</td>
-                    </tr>
-                `;
-            }
-        }
-
-        // 分頁切換
-        function switchTab(tabName) {
-            // 切換分頁按鈕
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            event.target.classList.add('active');
-
-            // 切換內容區域
-            document.querySelectorAll('.content-section').forEach(section => {
-                section.classList.remove('active');
-            });
-
-            if (tabName === 'cards') {
-                document.getElementById('cardsSection').classList.add('active');
-            } else if (tabName === 'monthTable') {
-                document.getElementById('monthTableSection').classList.add('active');
-            } else if (tabName === 'yearTable') {
-                document.getElementById('yearTableSection').classList.add('active');
-            }
-        }
-
-        // 格式化數字
-        function formatNumber(num) {
-            if (num === undefined || num === null) return '0';
-            return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-        }
-
-        // 匯出Excel
-        function exportToExcel() {
-            if (!currentData) return;
-
-            let csv = '\ufeff店鋪銷售數據報表\n\n';
-            csv += '月份數據\n';
-            csv += '店名,月目標,預估業績,實績,預估達成率,預估差距,去年同期,成長比,成長金額,月計達成率,目標差距\n';
-            
-            const monthlyRows = document.querySelectorAll('#monthlyBody tr');
-            monthlyRows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                const rowData = Array.from(cells).map(cell => cell.textContent.trim());
-                csv += rowData.join(',') + '\n';
-            });
-
-            csv += '\n年度數據\n';
-            csv += '店名,年度目標,預估業績,實績,預估達成率,預估差距,同期實績,成長比,成長金額,月計達成率,目標差距\n';
-            
-            const yearlyRows = document.querySelectorAll('#yearlyBody tr');
-            yearlyRows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                const rowData = Array.from(cells).map(cell => cell.textContent.trim());
-                csv += rowData.join(',') + '\n';
-            });
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = '店鋪銷售數據_' + new Date().toISOString().slice(0, 10) + '.csv';
-            link.click();
-        }
-
-        // 更新日期顯示（FY26Q1W7 11/7格式）
-        function updateTodayDate(reportDate) {
-            let targetDate, month, date;
-            
-            if (reportDate) {
-                // 使用報表日期
-                const parts = reportDate.split('/');
-                month = parseInt(parts[0]);
-                date = parseInt(parts[1]);
-                // 假設是2025年的日期
-                targetDate = new Date(2025, month - 1, date);
-            } else {
-                // 使用今天的日期
-                targetDate = new Date();
-                month = targetDate.getMonth() + 1;
-                date = targetDate.getDate();
-            }
-            
-            // FY26Q1的週數定義（實際對應表）
-            const fy26q1Weeks = [
-                { week: 1, startDate: new Date(2025, 8, 28) },   // 2025/9/28
-                { week: 2, startDate: new Date(2025, 9, 5) },    // 2025/10/5
-                { week: 3, startDate: new Date(2025, 9, 12) },   // 2025/10/12
-                { week: 4, startDate: new Date(2025, 9, 19) },   // 2025/10/19
-                { week: 5, startDate: new Date(2025, 9, 26) },   // 2025/10/26
-                { week: 6, startDate: new Date(2025, 10, 2) },   // 2025/11/2
-                { week: 7, startDate: new Date(2025, 10, 9) },   // 2025/11/9
-                { week: 8, startDate: new Date(2025, 10, 16) },  // 2025/11/16
-                { week: 9, startDate: new Date(2025, 10, 23) },  // 2025/11/23
-                { week: 10, startDate: new Date(2025, 10, 30) }, // 2025/11/30
-                { week: 11, startDate: new Date(2025, 11, 7) },  // 2025/12/7
-                { week: 12, startDate: new Date(2025, 11, 14) }, // 2025/12/14
-                { week: 13, startDate: new Date(2025, 11, 21) }  // 2025/12/21
-            ];
-            
-            // 找出是第幾週
-            let weekNumber = 1;
-            for (let i = fy26q1Weeks.length - 1; i >= 0; i--) {
-                if (targetDate >= fy26q1Weeks[i].startDate) {
-                    weekNumber = fy26q1Weeks[i].week;
-                    break;
-                }
-            }
-            
-            // 格式化日期
-            const dateStr = `${month}/${date}`;
-            const fyStr = `FY26Q1W${weekNumber}`;
-            
-            document.getElementById('todayDate').textContent = `📅      ${fyStr} ${dateStr}`;
-        }
-
-        // 初始化日期顯示（上傳報表後會更新為報表日期）
-        // updateTodayDate();
+        });
     </script>
 </body>
 </html>
